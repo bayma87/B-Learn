@@ -1,8 +1,18 @@
+import json
 import logging
+from decimal import Decimal
+from pathlib import Path
 
+from django.conf import settings
+from django.db.models import Sum
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
+from django.views.decorators.http import require_GET
 
 from .forms import ContactMessageForm
+from .models import RegistroResiduo
+from .residuos import calcular_resumo_residuos
+from .social import calcular_indicadores_sociais
 
 logger = logging.getLogger(__name__)
 
@@ -90,3 +100,86 @@ def quem_somos(request):
         form = ContactMessageForm()
 
     return render(request, 'appweb/quem_somos.html', {'form': form})
+
+def painel_residuos(request):
+    resumo = RegistroResiduo.objects.aggregate(
+        total_kg=Sum('quantidade_kg', default=0),
+    )
+
+    resumo_reciclado = RegistroResiduo.objects.filter(
+        destino='reciclado',
+    ).aggregate(
+        reciclado_kg=Sum('quantidade_kg', default=0),
+    )
+
+    total_kg = resumo['total_kg']
+    reciclado_kg = resumo_reciclado['reciclado_kg']
+    nao_reciclado_kg = total_kg - reciclado_kg
+
+    if total_kg > 0:
+        taxa_reciclagem = (reciclado_kg / total_kg) * 100
+    else:
+        taxa_reciclagem = Decimal('0')
+
+    contexto = {
+        'total_kg': total_kg,
+        'reciclado_kg': reciclado_kg,
+        'nao_reciclado_kg': nao_reciclado_kg,
+        'taxa_reciclagem': taxa_reciclagem,
+    }
+
+    return render(request, 'appweb/painel_residuos.html', contexto)
+
+@require_GET
+def resumo_residuos(request):
+    caminho = (
+        Path(settings.BASE_DIR)
+        / 'appweb'
+        / 'dados'
+        / 'residuos.json'
+    )
+
+    try:
+        dados = json.loads(caminho.read_text(encoding='utf-8'))
+        resumo = calcular_resumo_residuos(dados)
+    except (OSError, UnicodeError, ValueError):
+        logger.exception('Erro ao processar os dados de resíduos.')
+
+        return JsonResponse(
+            {'erro': 'Não foi possível carregar os indicadores de resíduos.'},
+            status=500,
+        )
+
+    return JsonResponse(
+        resumo,
+        json_dumps_params={'ensure_ascii': False},
+    )
+
+def painel_social(request):
+    return render(request, 'appweb/social.html')
+
+
+@require_GET
+def indicadores_sociais(request):
+    caminho = (
+        Path(settings.BASE_DIR)
+        / 'appweb'
+        / 'dados'
+        / 'social.json'
+    )
+
+    try:
+        dados = json.loads(caminho.read_text(encoding='utf-8'))
+        indicadores = calcular_indicadores_sociais(dados)
+    except (OSError, UnicodeError, ValueError):
+        logger.exception('Erro ao processar os dados sociais.')
+
+        return JsonResponse(
+            {'erro': 'Não foi possível carregar os indicadores sociais.'},
+            status=500,
+        )
+
+    return JsonResponse(
+        indicadores,
+        json_dumps_params={'ensure_ascii': False},
+    )

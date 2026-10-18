@@ -1,0 +1,46 @@
+{
+  "versao": 1,
+  "origem": "simulada",
+  "registros": [
+    {
+      "id_leitura": "demo-soc-001",
+      "data": "2026-10-15",
+      "local": "Produção - demonstração",
+      "tipo": "alerta_seguranca"
+    },
+    {
+      "id_leitura": "demo-soc-002",
+      "data": "2026-10-16",
+      "local": "Produção - demonstração",
+      "tipo": "alerta_seguranca"
+    },
+    {
+      "id_leitura": "demo-soc-003",
+      "data": "2026-10-16",
+      "local": "Produção - demonstração",
+      "tipo": "alerta_seguranca"
+    },
+    {
+      "id_leitura": "demo-soc-004",
+      "data": "2026-10-16",
+      "local": "Produção - demonstração",
+      "tipo": "alerta_seguranca"
+    },
+    {
+      "id_leitura": "demo-soc-005",
+      "data": "2026-09-30",
+      "local": "Produção - demonstração",
+      "tipo": "uso_equipamento",
+      "equipamento": "Prensa 01",
+      "horas_uso": "2.50"
+    },
+    {
+      "id_leitura": "demo-soc-006",
+      "data": "2026-10-16",
+      "local": "Produção - demonstração",
+      "tipo": "uso_equipamento",
+      "equipamento": "Prensa 01",
+      "horas_uso": "4.00"
+    }
+  ]
+}

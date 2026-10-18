@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MinValueValidator
 
 
 class AssessmentResult(models.Model):
@@ -31,3 +32,34 @@ class ContactMessage(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.email}"
+
+class RegistroResiduo(models.Model):
+    DESTINOS = [
+        ('reciclado', 'Reciclado'),
+        ('nao_reciclado', 'Não reciclado'),
+    ]
+
+    data = models.DateField()
+    local = models.CharField(max_length=100)
+
+    quantidade_kg = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(0)],
+    )
+
+    destino = models.CharField(
+        max_length=20,
+        choices=DESTINOS,  
+    )
+
+    class Meta:
+        ordering = ['-data', '-id']
+        verbose_name = 'Registro de resíduo'
+        verbose_name_plural = 'Registros de resíduos'
+
+    def __str__(self):
+        return (
+            f"{self.local} - {self.quantidade_kg} kg "
+            f"- {self.get_destino_display()}"
+        )
