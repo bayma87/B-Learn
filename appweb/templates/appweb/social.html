@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indicadores sociais | ESG Impact</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #2b0d2f;
+            color: #f3e7ef;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        header {
+            padding: 20px 24px;
+            background: #07080c;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        a {
+            color: #f3e7ef;
+            text-underline-offset: 4px;
+        }
+
+        a:focus-visible {
+            outline: 2px solid #f2d7af;
+            outline-offset: 4px;
+        }
+
+        .marca {
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-decoration: none;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 48px 24px;
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        main > p {
+            line-height: 1.6;
+            margin-bottom: 28px;
+        }
+
+        .cartoes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        article {
+            padding: 24px;
+            background: #1b081f;
+            border: 2px solid rgba(255, 255, 255, 0.14);
+            border-radius: 14px;
+        }
+
+        article h3 {
+            margin: 0 0 18px;
+            font-size: 1rem;
+        }
+
+        .valor {
+            margin: 0;
+            color: #f2d7af;
+            font-size: 1.5rem;
+            font-weight: 700;
+            overflow-wrap: anywhere;
+        }
+
+        .status-verde {
+            border-color: #81d6a4;
+        }
+
+        .status-verde .valor {
+            color: #81d6a4;
+        }
+
+        .status-amarelo {
+            border-color: #f5d76e;
+        }
+
+        .status-amarelo .valor {
+            color: #f5d76e;
+        }
+
+        .status-vermelho {
+            border-color: #ff9b9b;
+        }
+
+        .status-vermelho .valor {
+            color: #ff9b9b;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        {% include 'appweb/menu_lateral.html' with pagina_atual='social' %}
+
+        <a class="marca" href="{% url 'home' %}">ESG IMPACT</a>
+    </header>
+
+    <main>
+        <h1>Indicadores sociais</h1>
+        <p>Alertas de segurança e horas de uso dos equipamentos.</p>
+
+        <p id="mensagem-dados" role="status" aria-live="polite">
+            Carregando dados simulados...
+        </p>
+
+        <section aria-labelledby="titulo-resumo">
+            <h2 id="titulo-resumo">Resumo geral</h2>
+
+            <div class="cartoes">
+                <article>
+                    <h3>Alertas de segurança</h3>
+                    <p class="valor" id="total-alertas">Carregando...</p>
+                </article>
+
+                <article>
+                    <h3>Horas de uso dos equipamentos</h3>
+                    <p class="valor" id="horas-uso">Carregando...</p>
+                </article>
+
+                <article id="cartao-status">
+                    <h3>Status dos alertas</h3>
+                    <p class="valor" id="status-seguranca">Carregando...</p>
+                </article>
+            </div>
+        </section>
+
+        <p>
+            Premissa do protótipo: 0 alertas = verde;
+            1 a 3 = amarelo; 4 ou mais = vermelho.
+            O status considera somente os alertas registrados no período,
+            não uma avaliação completa da segurança.
+        </p>
+    </main>
+
+    <script>
+        async function carregarSocial() {
+            const mensagem = document.getElementById('mensagem-dados');
+            const cartaoStatus = document.getElementById('cartao-status');
+
+            try {
+                const resposta = await fetch(
+                    "{% url 'indicadores_sociais' %}",
+                    { cache: 'no-store' }
+                );
+
+                if (!resposta.ok) {
+                    throw new Error('Não foi possível consultar a API.');
+                }
+
+                const dados = await resposta.json();
+                const resumo = dados.total;
+                const alertas = Number(resumo.alertas_seguranca);
+                const horas = Number(resumo.horas_uso);
+                const statusValidos = ['verde', 'amarelo', 'vermelho'];
+
+                if (
+                    !Number.isInteger(alertas) || alertas < 0 ||
+                    !Number.isFinite(horas) || horas < 0 ||
+                    !statusValidos.includes(resumo.status)
+                ) {
+                    throw new Error('A API retornou indicadores inválidos.');
+                }
+
+                const rotulos = {
+                    verde: 'Verde — 0 alertas',
+                    amarelo: 'Amarelo — 1 a 3 alertas',
+                    vermelho: 'Vermelho — 4 ou mais alertas'
+                };
+
+                document.getElementById('total-alertas').textContent =
+                    alertas.toLocaleString('pt-BR');
+
+                document.getElementById('horas-uso').textContent =
+                    horas.toLocaleString('pt-BR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    }) + ' h';
+
+                document.getElementById('status-seguranca').textContent =
+                    rotulos[resumo.status];
+
+                cartaoStatus.classList.add('status-' + resumo.status);
+
+                mensagem.textContent =
+                    'Dados simulados carregados. Período: total dos registros.';
+            } catch (erro) {
+                console.error(erro);
+
+                mensagem.textContent =
+                    'Não foi possível carregar os indicadores sociais.';
+
+                cartaoStatus.classList.remove(
+                    'status-verde',
+                    'status-amarelo',
+                    'status-vermelho'
+                );
+
+                ['total-alertas', 'horas-uso', 'status-seguranca'].forEach(
+                    function (id) {
+                        document.getElementById(id).textContent =
+                            'Indisponível';
+                    }
+                );
+            }
+        }
+
+        carregarSocial();
+    </script>
+</body>
+</html>

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quem Somos</title>
+
     <style>
         :root {
             --bg: #120d18;
@@ -19,13 +20,20 @@
             --blue: #6aa8d9;
         }
 
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+        }
 
         body {
             margin: 0;
             min-height: 100vh;
             font-family: Arial, Helvetica, sans-serif;
-            background: radial-gradient(circle at top, rgba(93, 49, 108, 0.7), rgba(18, 13, 24, 0.96) 38%, rgba(8, 7, 10, 1) 100%);
+            background: radial-gradient(
+                circle at top,
+                rgba(93, 49, 108, 0.7),
+                rgba(18, 13, 24, 0.96) 38%,
+                rgba(8, 7, 10, 1) 100%
+            );
             color: var(--text);
         }
 
@@ -47,15 +55,6 @@
             font-weight: 700;
             letter-spacing: 0.14em;
             text-transform: uppercase;
-        }
-
-        .nav-link {
-            color: var(--muted);
-            text-decoration: none;
-            border: 1px solid var(--border);
-            padding: 10px 18px;
-            border-radius: 10px;
-            background: rgba(255,255,255,0.02);
         }
 
         .page {
@@ -155,7 +154,11 @@
         .submit-btn {
             margin-top: 8px;
             border: none;
-            background: linear-gradient(135deg, var(--pink), var(--pink-strong));
+            background: linear-gradient(
+                135deg,
+                var(--pink),
+                var(--pink-strong)
+            );
             color: white;
             font-weight: 700;
             border-radius: 12px;
@@ -189,21 +192,27 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <header class="topbar">
+            {% include 'appweb/menu_lateral.html' with pagina_atual='quem_somos' %}
+
             <div class="brand">bLEARN</div>
-            <a class="nav-link" href="/">Voltar para home</a>
         </header>
 
         <main class="page">
             <section class="card info">
                 <span class="eyebrow">Quem somos</span>
+
                 <h1>Transformamos estratégia e tecnologia em impacto real.</h1>
+
                 <p class="lead">
-                    Ajudamos empresas a entender melhor seus impactos ambientais, sociais e de governança,
-                    usando dados, inteligência e planejamento para transformar desafios em vantagem competitiva.
+                    Ajudamos empresas a entender melhor seus impactos ambientais,
+                    sociais e de governança, usando dados, inteligência e
+                    planejamento para transformar desafios em vantagem competitiva.
                 </p>
+
                 <ul class="list">
                     <li>Diagnósticos ESG para organizações de todos os portes.</li>
                     <li>Mapeamento de riscos, metas e oportunidades de melhoria.</li>
@@ -231,7 +240,9 @@
                         {{ form.message }}
                     </div>
 
-                    <button type="submit" class="submit-btn">Enviar pergunta</button>
+                    <button type="submit" class="submit-btn">
+                        Enviar pergunta
+                    </button>
                 </form>
 
                 {% if success_message %}

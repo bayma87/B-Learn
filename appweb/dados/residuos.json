@@ -1,0 +1,34 @@
+{
+  "versao": 1,
+  "origem": "simulada",
+  "registros": [
+    {
+      "id_leitura": "demo-res-001",
+      "data": "2026-10-16",
+      "local": "Estoque - demonstração",
+      "quantidade_kg": "12.50",
+      "destino": "reciclado"
+    },
+    {
+      "id_leitura": "demo-res-002",
+      "data": "2026-10-16",
+      "local": "Estoque - demonstração",
+      "quantidade_kg": "7.50",
+      "destino": "nao_reciclado"
+    },
+    {
+      "id_leitura": "demo-res-003",
+      "data": "2026-10-15",
+      "local": "Estoque - demonstração",
+      "quantidade_kg": "10.00",
+      "destino": "reciclado"
+    },
+    {
+      "id_leitura": "demo-res-004",
+      "data": "2026-09-30",
+      "local": "Estoque - demonstração",
+      "quantidade_kg": "5.00",
+      "destino": "nao_reciclado"
+    }
+  ]
+}
