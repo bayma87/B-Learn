@@ -22,6 +22,7 @@ from .models import RegistroResiduo
 from .recomendacoes import gerar_recomendacoes
 from .residuos import calcular_resumo_residuos
 from .social import calcular_indicadores_sociais
+from .sugestoes import selecionar_sugestoes_orientadas
 
 logger = logging.getLogger(__name__)
 
@@ -244,10 +245,40 @@ def consumo_por_hora_equipamentos(request):
     )
 
 
+def _carregar_indicadores_para_sugestoes():
+    caminho_social = (
+        Path(settings.BASE_DIR)
+        / 'appweb'
+        / 'dados'
+        / 'social.json'
+    )
+    caminho_residuos = (
+        Path(settings.BASE_DIR)
+        / 'appweb'
+        / 'dados'
+        / 'residuos.json'
+    )
+    indicadores_social = calcular_indicadores_sociais(
+        json.loads(caminho_social.read_text(encoding='utf-8'))
+    )
+    indicadores_residuos = calcular_resumo_residuos(
+        json.loads(caminho_residuos.read_text(encoding='utf-8'))
+    )
+    return indicadores_social, indicadores_residuos
+
+
 @require_GET
 def recomendacoes_esg(request):
     try:
         recomendacoes = gerar_recomendacoes()
+        indicadores_social, indicadores_residuos = (
+            _carregar_indicadores_para_sugestoes()
+        )
+        sugestoes = selecionar_sugestoes_orientadas(
+            recomendacoes,
+            indicadores_social,
+            indicadores_residuos,
+        )
     except (OSError, UnicodeError, ValueError):
         logger.exception('Erro ao processar o catálogo de recomendações.')
 
@@ -262,6 +293,8 @@ def recomendacoes_esg(request):
             'total': len(recomendacoes),
             'personalizada_por_indicadores': False,
             'recomendacoes': recomendacoes,
+            'sugestoes_orientadas': sugestoes['sugestoes_orientadas'],
+            'avaliacao_fontes': sugestoes['avaliacao_fontes'],
         },
         json_dumps_params={'ensure_ascii': False},
     )

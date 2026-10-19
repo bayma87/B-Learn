@@ -103,6 +103,43 @@
             border-radius: 14px;
         }
 
+        .lista-sugestoes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .sugestao-orientada {
+            padding: 24px;
+            background: #1b081f;
+            border: 1px solid rgba(196, 100, 204, 0.55);
+            border-radius: 14px;
+            overflow-wrap: anywhere;
+        }
+
+        .sugestao-orientada h3 {
+            margin: 0 0 8px;
+            font-size: 1.15rem;
+            line-height: 1.4;
+        }
+
+        .justificativa-sugestao,
+        .evidencia-sugestao,
+        .regra-sugestao {
+            line-height: 1.6;
+        }
+
+        .justificativa-sugestao {
+            margin: 0 0 16px;
+        }
+
+        .evidencia-sugestao,
+        .regra-sugestao {
+            margin: 0;
+            color: rgba(243, 231, 239, 0.78);
+        }
+
         .recomendacao h3 {
             margin: 0 0 8px;
             font-size: 1.15rem;
@@ -195,10 +232,10 @@
 
         <p class="aviso">
             Este é um catálogo demonstrativo com dados simulados.
-            As recomendações ainda não são personalizadas pelos indicadores
-            F1–F4. A prioridade considera somente o retorno financeiro
-            estimado da ação e não representa uma avaliação completa do
-            impacto ESG.
+            As sugestões orientadas usam regras demonstrativas sobre os
+            indicadores simulados disponíveis. A prioridade considera somente
+            o retorno financeiro estimado da ação e não representa uma
+            avaliação completa do impacto ESG.
         </p>
 
         <p id="mensagem-dados" class="estado" role="status" aria-live="polite">
@@ -216,6 +253,20 @@
                 class="lista-recomendacoes"
             ></div>
         </section>
+
+        <section aria-labelledby="titulo-sugestoes">
+            <div class="lista-cabecalho">
+                <h2 id="titulo-sugestoes">
+                    Sugestões orientadas pelos indicadores simulados
+                </h2>
+                <span id="total-sugestoes"></span>
+            </div>
+
+            <p id="mensagem-sugestoes" class="estado" role="status" aria-live="polite">
+                Avaliando indicadores simulados...
+            </p>
+            <div id="lista-sugestoes" class="lista-sugestoes"></div>
+        </section>
     </main>
 
     <script>
@@ -226,6 +277,11 @@
         const listaRecomendacoes = document.getElementById(
             'lista-recomendacoes'
         );
+        const mensagemSugestoes = document.getElementById(
+            'mensagem-sugestoes'
+        );
+        const totalSugestoes = document.getElementById('total-sugestoes');
+        const listaSugestoes = document.getElementById('lista-sugestoes');
 
         function formatarMoeda(valor) {
             if (!/^\d+\.\d{2}$/.test(valor)) {
@@ -341,9 +397,90 @@
             return artigo;
         }
 
+        function validarFonte(fonte) {
+            if (!fonte || typeof fonte !== 'object' ||
+                !['avaliada', 'sem_dados', 'indisponivel'].includes(
+                    fonte.situacao
+                )) {
+                throw new Error('A API retornou uma avaliação de fonte inválida.');
+            }
+
+            if (fonte.situacao === 'avaliada' && fonte.escopo !== 'agregado') {
+                throw new Error('A API retornou um escopo de fonte inválido.');
+            }
+
+            if (fonte.situacao === 'indisponivel' &&
+                (typeof fonte.motivo !== 'string' || !fonte.motivo.trim())) {
+                throw new Error('A API retornou um motivo de fonte inválido.');
+            }
+        }
+
+        function criarSugestao(item) {
+            if (
+                !item || typeof item !== 'object' ||
+                typeof item.id_acao !== 'string' ||
+                typeof item.acao !== 'string' ||
+                typeof item.pilar !== 'string' ||
+                typeof item.justificativa !== 'string' ||
+                typeof item.regra_aplicada !== 'string' ||
+                item.natureza_financeira !== 'estimativa_do_catalogo' ||
+                !Array.isArray(item.evidencias) ||
+                item.evidencias.length === 0
+            ) {
+                throw new Error('A API retornou uma sugestão inválida.');
+            }
+
+            const artigo = document.createElement('article');
+            artigo.className = 'sugestao-orientada';
+
+            const titulo = document.createElement('h3');
+            titulo.textContent = item.id_acao + ' — ' + item.acao;
+
+            const pilar = document.createElement('p');
+            pilar.className = 'pilar';
+            pilar.textContent = item.pilar;
+
+            const justificativa = document.createElement('p');
+            justificativa.className = 'justificativa-sugestao';
+            justificativa.textContent = item.justificativa;
+
+            const regra = document.createElement('p');
+            regra.className = 'regra-sugestao';
+            regra.textContent = 'Regra aplicada: ' + item.regra_aplicada;
+
+            const evidencias = document.createElement('div');
+            evidencias.className = 'evidencia-sugestao';
+            item.evidencias.forEach(function (evidencia) {
+                if (
+                    !evidencia || typeof evidencia !== 'object' ||
+                    typeof evidencia.indicador !== 'string' ||
+                    evidencia.escopo !== 'agregado' ||
+                    !evidencia.valores_observados ||
+                    typeof evidencia.valores_observados !== 'object' ||
+                    Object.prototype.hasOwnProperty.call(evidencia, 'local') ||
+                    Object.prototype.hasOwnProperty.call(evidencia, 'periodo_inicio') ||
+                    Object.prototype.hasOwnProperty.call(evidencia, 'periodo_fim')
+                ) {
+                    throw new Error('A API retornou uma evidência inválida.');
+                }
+
+                const texto = document.createElement('p');
+                texto.textContent =
+                    'Indicador observado: ' + evidencia.indicador +
+                    ' (escopo agregado)';
+                evidencias.appendChild(texto);
+            });
+
+            artigo.append(titulo, pilar, justificativa, regra, evidencias);
+            return artigo;
+        }
+
         function mostrarErro(mensagem) {
             listaRecomendacoes.replaceChildren();
             totalRecomendacoes.textContent = '';
+            listaSugestoes.replaceChildren();
+            totalSugestoes.textContent = '';
+            mensagemSugestoes.textContent = '';
             mensagemDados.textContent = mensagem;
         }
 
@@ -362,16 +499,39 @@
                 if (
                     !dados || typeof dados !== 'object' ||
                     !Array.isArray(dados.recomendacoes) ||
+                    !Array.isArray(dados.sugestoes_orientadas) ||
                     dados.origem !== 'simulada' ||
-                    dados.personalizada_por_indicadores !== false
+                    dados.personalizada_por_indicadores !== false ||
+                    !dados.avaliacao_fontes ||
+                    typeof dados.avaliacao_fontes !== 'object'
                 ) {
                     throw new Error('A API retornou uma estrutura inválida.');
                 }
+
+                validarFonte(dados.avaliacao_fontes.social);
+                validarFonte(dados.avaliacao_fontes.residuos);
 
                 listaRecomendacoes.replaceChildren();
                 dados.recomendacoes.forEach(function (item) {
                     listaRecomendacoes.appendChild(criarRecomendacao(item));
                 });
+
+                listaSugestoes.replaceChildren();
+                dados.sugestoes_orientadas.forEach(function (item) {
+                    listaSugestoes.appendChild(criarSugestao(item));
+                });
+
+                if (dados.sugestoes_orientadas.length === 0) {
+                    totalSugestoes.textContent = '';
+                    mensagemSugestoes.textContent =
+                        'Nenhuma sugestão orientada pelos indicadores simulados.';
+                } else {
+                    totalSugestoes.textContent =
+                        dados.sugestoes_orientadas.length.toLocaleString('pt-BR') +
+                        ' sugestões';
+                    mensagemSugestoes.textContent =
+                        'As sugestões são indicativas e baseadas em evidências agregadas.';
+                }
 
                 if (dados.recomendacoes.length === 0) {
                     totalRecomendacoes.textContent = '';

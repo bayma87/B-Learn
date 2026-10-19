@@ -367,6 +367,27 @@ class RecomendacoesApiTests(TestCase):
             [item['id_acao'] for item in recomendacoes],
             ['A04', 'A02', 'A01', 'A03', 'A06', 'A05'],
         )
+        self.assertEqual(
+            [item['id_acao'] for item in dados['sugestoes_orientadas']],
+            ['A06', 'A05'],
+        )
+        self.assertEqual(
+            dados['avaliacao_fontes'],
+            {
+                'social': {'situacao': 'avaliada', 'escopo': 'agregado'},
+                'residuos': {'situacao': 'avaliada', 'escopo': 'agregado'},
+            },
+        )
+        for sugestao in dados['sugestoes_orientadas']:
+            self.assertIn('justificativa', sugestao)
+            self.assertEqual(
+                sugestao['natureza_financeira'],
+                'estimativa_do_catalogo',
+            )
+            self.assertEqual(sugestao['evidencias'][0]['escopo'], 'agregado')
+            self.assertNotIn('local', sugestao['evidencias'][0])
+            self.assertNotIn('periodo_inicio', sugestao['evidencias'][0])
+            self.assertNotIn('periodo_fim', sugestao['evidencias'][0])
 
         for item in recomendacoes:
             self.assertTrue(item['dados_simulados'])
@@ -406,6 +427,35 @@ class RecomendacoesApiTests(TestCase):
 
         self.assertIsInstance(item_com_payback['payback_meses'], str)
         self.assertIsNone(item_sem_payback['payback_meses'])
+
+    @patch('appweb.views.selecionar_sugestoes_orientadas')
+    def test_api_preserva_catalogo_quando_nao_ha_sugestoes(
+        self,
+        mock_selecionar,
+    ):
+        mock_selecionar.return_value = {
+            'origem': 'simulada',
+            'avaliacao_fontes': {
+                'social': {'situacao': 'avaliada', 'escopo': 'agregado'},
+                'residuos': {'situacao': 'avaliada', 'escopo': 'agregado'},
+            },
+            'sugestoes_orientadas': [],
+        }
+
+        response = self.client.get(reverse('recomendacoes'), secure=True)
+
+        self.assertEqual(response.status_code, 200)
+        dados = response.json()
+        self.assertEqual(
+            [item['id_acao'] for item in dados['recomendacoes']],
+            ['A04', 'A02', 'A01', 'A03', 'A06', 'A05'],
+        )
+        self.assertEqual(dados['sugestoes_orientadas'], [])
+        self.assertEqual(dados['total'], 6)
+        self.assertEqual(
+            dados['avaliacao_fontes']['social']['situacao'],
+            'avaliada',
+        )
 
     def test_recomendacoes_nao_aceita_metodo_post(self):
         response = self.client.post(
@@ -760,13 +810,17 @@ class RecomendacoesPaginaTests(TestCase):
         self.assertContains(response, 'Recomendações ESG')
         self.assertContains(response, 'catálogo demonstrativo')
         self.assertContains(response, 'dados simulados')
-        self.assertContains(
-            response,
-            'não são personalizadas pelos indicadores',
-        )
-        self.assertContains(response, 'F1–F4')
+        self.assertContains(response, 'sugestões orientadas')
+        self.assertContains(response, 'indicadores simulados disponíveis')
         self.assertContains(response, 'retorno financeiro')
         self.assertContains(response, 'estimado da ação')
+        self.assertContains(
+            response,
+            'Sugestões orientadas pelos indicadores simulados',
+        )
+        self.assertContains(response, 'lista-sugestoes')
+        self.assertContains(response, 'justificativa')
+        self.assertContains(response, 'avaliacao_fontes')
         self.assertContains(
             response,
             f'href="{reverse("painel_recomendacoes")}"',
