@@ -160,6 +160,10 @@ def painel_social(request):
     return render(request, 'appweb/social.html')
 
 
+def painel_recomendacoes(request):
+    return render(request, 'appweb/painel_recomendacoes.html')
+
+
 @require_GET
 def indicadores_sociais(request):
     caminho = (

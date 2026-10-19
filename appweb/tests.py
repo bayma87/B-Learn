@@ -433,3 +433,29 @@ class RecomendacoesApiTests(TestCase):
             {'erro': 'Não foi possível carregar as recomendações.'},
         )
         self.assertNotIn('detalhe interno', response.content.decode())
+
+
+class RecomendacoesPaginaTests(TestCase):
+    def test_pagina_de_recomendacoes_renderiza_com_menu_e_api(self):
+        response = self.client.get(
+            reverse('painel_recomendacoes'),
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Recomendações ESG')
+        self.assertContains(response, 'catálogo demonstrativo')
+        self.assertContains(response, 'dados simulados')
+        self.assertContains(
+            response,
+            'não são personalizadas pelos indicadores',
+        )
+        self.assertContains(response, 'F1–F4')
+        self.assertContains(response, 'retorno financeiro')
+        self.assertContains(response, 'estimado da ação')
+        self.assertContains(
+            response,
+            f'href="{reverse("painel_recomendacoes")}"',
+        )
+        self.assertContains(response, 'aria-current="page"')
+        self.assertContains(response, f'"{reverse("recomendacoes")}"')

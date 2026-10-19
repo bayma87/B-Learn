@@ -183,6 +183,11 @@
             Social
         </a>
 
+        <a href="{% url 'painel_recomendacoes' %}"
+           {% if pagina_atual == 'recomendacoes' %}aria-current="page"{% endif %}>
+            Recomendações
+        </a>
+
         <a href="{% url 'quem_somos' %}"
            {% if pagina_atual == 'quem_somos' %}aria-current="page"{% endif %}>
             Quem somos

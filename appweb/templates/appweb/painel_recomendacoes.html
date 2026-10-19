@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recomendações ESG | ESG Impact</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #2b0d2f;
+            color: #f3e7ef;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        header {
+            padding: 20px 24px;
+            background: #07080c;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        a {
+            color: #f3e7ef;
+        }
+
+        a:focus-visible {
+            outline: 2px solid #f2d7af;
+            outline-offset: 4px;
+        }
+
+        .marca {
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-decoration: none;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 48px 24px;
+        }
+
+        h1 {
+            margin: 0 0 12px;
+            font-size: 2rem;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 1.25rem;
+        }
+
+        .introducao,
+        .aviso,
+        .estado {
+            line-height: 1.6;
+        }
+
+        .introducao {
+            margin: 0 0 12px;
+        }
+
+        .aviso {
+            margin: 0 0 32px;
+            padding: 16px 20px;
+            background: rgba(242, 215, 175, 0.08);
+            border-left: 3px solid #f2d7af;
+            border-radius: 8px;
+        }
+
+        .estado {
+            margin: 0 0 28px;
+        }
+
+        .lista-cabecalho {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .lista-recomendacoes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .recomendacao {
+            padding: 24px;
+            background: #1b081f;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 14px;
+        }
+
+        .recomendacao h3 {
+            margin: 0 0 8px;
+            font-size: 1.15rem;
+            line-height: 1.4;
+        }
+
+        .pilar {
+            margin: 0 0 18px;
+            color: #f2d7af;
+        }
+
+        .prioridade {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 5px 10px;
+            border: 1px solid rgba(242, 215, 175, 0.45);
+            border-radius: 999px;
+            color: #f2d7af;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .dados-recomendacao {
+            display: grid;
+            gap: 14px;
+            margin: 0;
+        }
+
+        .dado {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .dado dt {
+            color: rgba(243, 231, 239, 0.78);
+        }
+
+        .dado dd {
+            margin: 0;
+            color: #f2d7af;
+            font-weight: 700;
+            text-align: right;
+        }
+
+        .valor-monetario {
+            white-space: nowrap;
+        }
+
+        .indisponivel {
+            color: #ffb2b2 !important;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        @media (max-width: 560px) {
+            .lista-cabecalho,
+            .dado {
+                display: block;
+            }
+
+            .lista-cabecalho h2 {
+                margin-bottom: 8px;
+            }
+
+            .dado dd {
+                margin-top: 4px;
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        {% include 'appweb/menu_lateral.html' with pagina_atual='recomendacoes' %}
+
+        <a class="marca" href="{% url 'home' %}">ESG IMPACT</a>
+    </header>
+
+    <main>
+        <h1>Recomendações ESG</h1>
+        <p class="introducao">
+            Ações demonstrativas para apoiar decisões de investimento ESG.
+        </p>
+
+        <p class="aviso">
+            Este é um catálogo demonstrativo com dados simulados.
+            As recomendações ainda não são personalizadas pelos indicadores
+            F1–F4. A prioridade considera somente o retorno financeiro
+            estimado da ação e não representa uma avaliação completa do
+            impacto ESG.
+        </p>
+
+        <p id="mensagem-dados" class="estado" role="status" aria-live="polite">
+            Carregando recomendações...
+        </p>
+
+        <section aria-labelledby="titulo-recomendacoes">
+            <div class="lista-cabecalho">
+                <h2 id="titulo-recomendacoes">Ações recomendadas</h2>
+                <span id="total-recomendacoes"></span>
+            </div>
+
+            <div
+                id="lista-recomendacoes"
+                class="lista-recomendacoes"
+            ></div>
+        </section>
+    </main>
+
+    <script>
+        const mensagemDados = document.getElementById('mensagem-dados');
+        const totalRecomendacoes = document.getElementById(
+            'total-recomendacoes'
+        );
+        const listaRecomendacoes = document.getElementById(
+            'lista-recomendacoes'
+        );
+
+        function formatarMoeda(valor) {
+            if (!/^\d+\.\d{2}$/.test(valor)) {
+                throw new Error('Valor financeiro inválido.');
+            }
+
+            const partes = valor.split('.');
+            const inteiro = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return 'R$ ' + inteiro + ',' + partes[1];
+        }
+
+        function formatarPayback(valor) {
+            if (!/^\d+(\.\d+)?$/.test(valor)) {
+                throw new Error('Payback inválido.');
+            }
+
+            return valor.replace('.', ',') + ' meses';
+        }
+
+        function criarDado(rotulo, valor, classe) {
+            const item = document.createElement('div');
+            item.className = 'dado';
+
+            const titulo = document.createElement('dt');
+            titulo.textContent = rotulo;
+
+            const conteudo = document.createElement('dd');
+            conteudo.textContent = valor;
+            if (classe) {
+                conteudo.className = classe;
+            }
+
+            item.append(titulo, conteudo);
+            return item;
+        }
+
+        function criarRecomendacao(item) {
+            if (
+                !item || typeof item !== 'object' ||
+                typeof item.acao !== 'string' ||
+                typeof item.pilar !== 'string' ||
+                typeof item.economia_estimada_mensal !== 'string' ||
+                !item.investimento_sugerido ||
+                typeof item.investimento_sugerido !== 'object' ||
+                typeof item.investimento_sugerido.minimo !== 'string' ||
+                typeof item.investimento_sugerido.recomendado !== 'string' ||
+                typeof item.investimento_sugerido.maximo !== 'string' ||
+                (item.payback_meses !== null &&
+                    typeof item.payback_meses !== 'string') ||
+                (item.prioridade !== null &&
+                    typeof item.prioridade !== 'string')
+            ) {
+                throw new Error('A API retornou uma recomendação inválida.');
+            }
+
+            const artigo = document.createElement('article');
+            artigo.className = 'recomendacao';
+
+            const titulo = document.createElement('h3');
+            titulo.textContent = item.acao;
+
+            const pilar = document.createElement('p');
+            pilar.className = 'pilar';
+            pilar.textContent = item.pilar;
+
+            const prioridade = document.createElement('span');
+            prioridade.className = 'prioridade';
+            prioridade.textContent = item.prioridade || 'Sem prioridade';
+
+            const dados = document.createElement('dl');
+            dados.className = 'dados-recomendacao';
+            dados.append(
+                criarDado(
+                    'Investimento mínimo',
+                    formatarMoeda(item.investimento_sugerido.minimo),
+                    'valor-monetario'
+                ),
+                criarDado(
+                    'Investimento recomendado',
+                    formatarMoeda(item.investimento_sugerido.recomendado),
+                    'valor-monetario'
+                ),
+                criarDado(
+                    'Investimento máximo',
+                    formatarMoeda(item.investimento_sugerido.maximo),
+                    'valor-monetario'
+                ),
+                criarDado(
+                    'Economia mensal estimada',
+                    formatarMoeda(item.economia_estimada_mensal),
+                    'valor-monetario'
+                )
+            );
+
+            if (item.payback_meses === null) {
+                dados.append(
+                    criarDado(
+                        'Payback',
+                        item.payback_indisponivel || 'Indisponível',
+                        'indisponivel'
+                    )
+                );
+            } else {
+                dados.append(
+                    criarDado(
+                        'Payback',
+                        formatarPayback(item.payback_meses)
+                    )
+                );
+            }
+
+            artigo.append(titulo, pilar, prioridade, dados);
+            return artigo;
+        }
+
+        function mostrarErro(mensagem) {
+            listaRecomendacoes.replaceChildren();
+            totalRecomendacoes.textContent = '';
+            mensagemDados.textContent = mensagem;
+        }
+
+        async function carregarRecomendacoes() {
+            try {
+                const resposta = await fetch(
+                    "{% url 'recomendacoes' %}",
+                    { cache: 'no-store' }
+                );
+
+                if (!resposta.ok) {
+                    throw new Error('Não foi possível consultar a API.');
+                }
+
+                const dados = await resposta.json();
+                if (
+                    !dados || typeof dados !== 'object' ||
+                    !Array.isArray(dados.recomendacoes) ||
+                    dados.origem !== 'simulada' ||
+                    dados.personalizada_por_indicadores !== false
+                ) {
+                    throw new Error('A API retornou uma estrutura inválida.');
+                }
+
+                listaRecomendacoes.replaceChildren();
+                dados.recomendacoes.forEach(function (item) {
+                    listaRecomendacoes.appendChild(criarRecomendacao(item));
+                });
+
+                if (dados.recomendacoes.length === 0) {
+                    totalRecomendacoes.textContent = '';
+                    mensagemDados.textContent =
+                        'Nenhuma recomendação disponível no momento.';
+                    return;
+                }
+
+                totalRecomendacoes.textContent =
+                    dados.recomendacoes.length.toLocaleString('pt-BR') +
+                    ' recomendações';
+                mensagemDados.textContent =
+                    'Dados simulados carregados. A ordem segue o serviço de recomendações.';
+            } catch (erro) {
+                console.error(erro);
+                mostrarErro('Não foi possível carregar as recomendações.');
+            }
+        }
+
+        carregarRecomendacoes();
+    </script>
+</body>
+</html>

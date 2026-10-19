@@ -19,4 +19,9 @@ urlpatterns = [
         views.recomendacoes_esg,
         name='recomendacoes',
     ),
+    path(
+        'painel-recomendacoes/',
+        views.painel_recomendacoes,
+        name='painel_recomendacoes',
+    ),
 ]
