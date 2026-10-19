@@ -176,6 +176,10 @@ def painel_consumo(request):
     return render(request, 'appweb/painel_consumo.html')
 
 
+def painel_equipamentos(request):
+    return render(request, 'appweb/painel_equipamentos.html')
+
+
 @require_GET
 def indicadores_sociais(request):
     caminho = (

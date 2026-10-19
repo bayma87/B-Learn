@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consumo por equipamento e hora de uso | ESG Impact</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #2b0d2f;
+            color: #f3e7ef;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        header {
+            padding: 20px 24px;
+            background: #07080c;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        a {
+            color: #f3e7ef;
+        }
+
+        a:focus-visible {
+            outline: 2px solid #f2d7af;
+            outline-offset: 4px;
+        }
+
+        .marca {
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-decoration: none;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 48px 24px;
+        }
+
+        h1 {
+            margin: 0 0 12px;
+            font-size: 2rem;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 1.25rem;
+        }
+
+        .introducao,
+        .aviso,
+        .estado {
+            line-height: 1.6;
+        }
+
+        .introducao {
+            margin: 0 0 12px;
+        }
+
+        .aviso {
+            margin: 0 0 32px;
+            padding: 16px 20px;
+            background: rgba(242, 215, 175, 0.08);
+            border-left: 3px solid #f2d7af;
+            border-radius: 8px;
+            overflow-wrap: anywhere;
+        }
+
+        .estado {
+            margin: 0 0 28px;
+        }
+
+        .lista-cabecalho {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .lista-equipamentos {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .equipamento {
+            padding: 24px;
+            background: #1b081f;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 14px;
+            overflow-wrap: anywhere;
+        }
+
+        .equipamento h3 {
+            margin: 0 0 8px;
+            font-size: 1.2rem;
+            line-height: 1.4;
+        }
+
+        .identificacao,
+        .periodo {
+            margin: 0 0 18px;
+            color: #f2d7af;
+            line-height: 1.6;
+        }
+
+        .periodo {
+            color: rgba(243, 231, 239, 0.78);
+        }
+
+        .dados-equipamento {
+            display: grid;
+            gap: 14px;
+            margin: 0;
+        }
+
+        .dado {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .dado dt {
+            color: rgba(243, 231, 239, 0.78);
+        }
+
+        .dado dd {
+            margin: 0;
+            color: #f2d7af;
+            font-weight: 700;
+            text-align: right;
+        }
+
+        .avaliacao {
+            margin: 24px 0 0;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.14);
+            line-height: 1.6;
+            overflow-wrap: anywhere;
+        }
+
+        .avaliacao-disponivel {
+            color: #f2d7af;
+        }
+
+        .avaliacao-indisponivel {
+            color: #ffcf9f;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        @media (max-width: 560px) {
+            .lista-cabecalho,
+            .dado {
+                display: block;
+            }
+
+            .lista-cabecalho h2 {
+                margin-bottom: 8px;
+            }
+
+            .dado dd {
+                margin-top: 4px;
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        {% include 'appweb/menu_lateral.html' with pagina_atual='equipamentos' %}
+
+        <a class="marca" href="{% url 'home' %}">ESG IMPACT</a>
+    </header>
+
+    <main>
+        <h1>Consumo por equipamento e hora de uso</h1>
+        <p class="introducao">
+            Consulte o consumo individual de cada equipamento no seu próprio
+            período de observação.
+        </p>
+
+        <p class="aviso">
+            Estes dados e períodos são cenários simulados, inclusive os
+            futuros; não representam medições reais já realizadas. Não há
+            vínculo automático com Social ou F1. O indicador é consumo por
+            hora de uso, não classificação de eficiência. Não há ranking nem
+            comparação automática entre funções diferentes.
+        </p>
+
+        <p id="mensagem-dados" class="estado" role="status" aria-live="polite">
+            Carregando consumo por equipamento...
+        </p>
+
+        <section aria-labelledby="titulo-equipamentos">
+            <div class="lista-cabecalho">
+                <h2 id="titulo-equipamentos">Registros por equipamento</h2>
+                <span id="total-equipamentos"></span>
+            </div>
+
+            <div id="lista-equipamentos" class="lista-equipamentos"></div>
+        </section>
+    </main>
+
+    <script>
+        const mensagemDados = document.getElementById('mensagem-dados');
+        const totalEquipamentos = document.getElementById('total-equipamentos');
+        const listaEquipamentos = document.getElementById('lista-equipamentos');
+
+        function formatarDecimal(valor) {
+            if (typeof valor !== 'string' || !/^\d+(\.\d+)?$/.test(valor)) {
+                throw new Error('Número de equipamento inválido.');
+            }
+
+            const partes = valor.split('.');
+            const inteiro = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return partes.length === 1
+                ? inteiro
+                : inteiro + ',' + partes[1];
+        }
+
+        function formatarData(valor) {
+            if (typeof valor !== 'string') {
+                throw new Error('Data de equipamento inválida.');
+            }
+
+            const partes = valor.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            if (!partes) {
+                throw new Error('Data de equipamento inválida.');
+            }
+
+            return partes[3] + '/' + partes[2] + '/' + partes[1];
+        }
+
+        function criarDado(rotulo, valor) {
+            const item = document.createElement('div');
+            item.className = 'dado';
+
+            const titulo = document.createElement('dt');
+            titulo.textContent = rotulo;
+
+            const conteudo = document.createElement('dd');
+            conteudo.textContent = valor;
+
+            item.append(titulo, conteudo);
+            return item;
+        }
+
+        function validarGrupo(grupo) {
+            if (
+                !grupo || typeof grupo !== 'object' ||
+                typeof grupo.id_registro !== 'string' ||
+                typeof grupo.equipamento_id !== 'string' ||
+                typeof grupo.equipamento !== 'string' ||
+                typeof grupo.local !== 'string' ||
+                grupo.recurso !== 'energia' ||
+                grupo.unidade_consumo !== 'kWh' ||
+                grupo.unidade_horas !== 'h' ||
+                grupo.unidade_consumo_por_hora !== 'kWh/h' ||
+                typeof grupo.consumo_kwh !== 'string' ||
+                typeof grupo.horas_uso !== 'string' ||
+                typeof grupo.periodo_inicio !== 'string' ||
+                typeof grupo.periodo_fim !== 'string' ||
+                (grupo.consumo_por_hora !== null &&
+                    typeof grupo.consumo_por_hora !== 'string') ||
+                !['disponivel', 'indisponivel'].includes(grupo.avaliacao) ||
+                (grupo.motivo !== null && typeof grupo.motivo !== 'string')
+            ) {
+                throw new Error('A API retornou um registro inválido.');
+            }
+
+            if (!grupo.equipamento_id.trim() || !grupo.equipamento.trim() ||
+                !grupo.local.trim() || !grupo.id_registro.trim()) {
+                throw new Error('A API retornou uma identidade inválida.');
+            }
+
+            if (!/^\d+(\.\d+)?$/.test(grupo.consumo_kwh) ||
+                !/^\d+(\.\d+)?$/.test(grupo.horas_uso)) {
+                throw new Error('A API retornou números inválidos.');
+            }
+
+            if (!/^\d+(\.\d+)?$/.test(grupo.consumo_por_hora || '')) {
+                if (grupo.consumo_por_hora !== null) {
+                    throw new Error('A API retornou uma razão inválida.');
+                }
+            }
+
+            if (grupo.avaliacao === 'disponivel' &&
+                (grupo.consumo_por_hora === null || grupo.motivo !== null)) {
+                throw new Error('A avaliação disponível está incoerente.');
+            }
+
+            if (grupo.avaliacao === 'indisponivel' &&
+                (grupo.consumo_por_hora !== null ||
+                    typeof grupo.motivo !== 'string' ||
+                    !grupo.motivo.trim())) {
+                throw new Error('A avaliação indisponível está incoerente.');
+            }
+        }
+
+        function criarGrupo(grupo) {
+            validarGrupo(grupo);
+
+            const artigo = document.createElement('article');
+            artigo.className = 'equipamento';
+
+            const titulo = document.createElement('h3');
+            titulo.textContent = grupo.equipamento;
+
+            const identificacao = document.createElement('p');
+            identificacao.className = 'identificacao';
+            identificacao.textContent =
+                'ID: ' + grupo.equipamento_id + ' | Local: ' + grupo.local;
+
+            const periodo = document.createElement('p');
+            periodo.className = 'periodo';
+            periodo.textContent =
+                'Período: ' + formatarData(grupo.periodo_inicio) +
+                ' a ' + formatarData(grupo.periodo_fim);
+
+            const dados = document.createElement('dl');
+            dados.className = 'dados-equipamento';
+            dados.append(
+                criarDado(
+                    'Consumo',
+                    formatarDecimal(grupo.consumo_kwh) + ' kWh'
+                ),
+                criarDado(
+                    'Horas de uso',
+                    formatarDecimal(grupo.horas_uso) + ' h'
+                ),
+                criarDado(
+                    'Consumo por hora de uso',
+                    grupo.consumo_por_hora === null
+                        ? 'Indisponível'
+                        : formatarDecimal(grupo.consumo_por_hora) + ' kWh/h'
+                )
+            );
+
+            artigo.append(titulo, identificacao, periodo, dados);
+
+            const avaliacao = document.createElement('p');
+            avaliacao.className = 'avaliacao ' + (
+                grupo.avaliacao === 'disponivel'
+                    ? 'avaliacao-disponivel'
+                    : 'avaliacao-indisponivel'
+            );
+            avaliacao.textContent = grupo.avaliacao === 'disponivel'
+                ? 'Estado: disponível'
+                : 'Estado: indisponível. Motivo: ' + grupo.motivo;
+            artigo.appendChild(avaliacao);
+
+            return artigo;
+        }
+
+        function mostrarErro(mensagem) {
+            listaEquipamentos.replaceChildren();
+            totalEquipamentos.textContent = '';
+            mensagemDados.textContent = mensagem;
+        }
+
+        async function carregarEquipamentos() {
+            try {
+                const resposta = await fetch(
+                    "{% url 'consumo_por_hora_equipamentos' %}",
+                    { cache: 'no-store' }
+                );
+
+                if (!resposta.ok) {
+                    throw new Error('Não foi possível consultar a API.');
+                }
+
+                const dados = await resposta.json();
+                if (
+                    !dados || typeof dados !== 'object' ||
+                    dados.origem !== 'simulada' ||
+                    !Array.isArray(dados.grupos)
+                ) {
+                    throw new Error('A API retornou uma estrutura inválida.');
+                }
+
+                listaEquipamentos.replaceChildren();
+                dados.grupos.forEach(function (grupo) {
+                    listaEquipamentos.appendChild(criarGrupo(grupo));
+                });
+
+                if (dados.grupos.length === 0) {
+                    totalEquipamentos.textContent = '';
+                    mensagemDados.textContent =
+                        'Nenhum registro de equipamento disponível no momento.';
+                    return;
+                }
+
+                totalEquipamentos.textContent =
+                    dados.grupos.length.toLocaleString('pt-BR') +
+                    ' registros';
+                mensagemDados.textContent =
+                    'Dados simulados carregados. A ordem segue a API.';
+            } catch (erro) {
+                console.error(erro);
+                mostrarErro(
+                    'Não foi possível carregar o consumo por equipamento.'
+                );
+            }
+        }
+
+        carregarEquipamentos();
+    </script>
+</body>
+</html>

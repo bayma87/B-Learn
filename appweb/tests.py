@@ -1373,6 +1373,69 @@ class EquipamentosApiTests(TestCase):
         self.assertNotIn('recurso deve ser energia', response.content.decode())
 
 
+class EquipamentosPaginaTests(TestCase):
+    def test_pagina_renderiza_template_rota_e_avisos(self):
+        response = self.client.get(
+            reverse('painel_equipamentos'),
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(
+            response,
+            'appweb/painel_equipamentos.html',
+        )
+        self.assertEqual(
+            resolve('/painel-equipamentos/').url_name,
+            'painel_equipamentos',
+        )
+        self.assertContains(response, 'Consumo por equipamento e hora de uso')
+        conteudo_normalizado = ' '.join(
+            response.content.decode('utf-8').split()
+        )
+        self.assertIn(
+            'dados e períodos são cenários simulados',
+            conteudo_normalizado,
+        )
+        self.assertIn(
+            'não representam medições reais já realizadas',
+            conteudo_normalizado,
+        )
+        self.assertIn(
+            'Não há vínculo automático com Social ou F1.',
+            conteudo_normalizado,
+        )
+        self.assertIn(
+            'não classificação de eficiência',
+            conteudo_normalizado,
+        )
+        self.assertIn(
+            'Não há ranking nem comparação automática entre funções diferentes.',
+            conteudo_normalizado,
+        )
+        self.assertContains(
+            response,
+            f'"{reverse("consumo_por_hora_equipamentos")}"',
+        )
+
+    def test_menu_destaca_especificamente_equipamentos_e_preserva_rotas(self):
+        response = self.client.get(
+            reverse('painel_equipamentos'),
+            secure=True,
+        )
+        conteudo = response.content.decode('utf-8')
+        equipamentos_url = re.escape(reverse('painel_equipamentos'))
+
+        self.assertRegex(
+            conteudo,
+            rf'<a href="{equipamentos_url}"\s+aria-current="page">\s*'
+            r'Equipamentos\s*</a>',
+        )
+        self.assertContains(response, f'href="{reverse("home")}"')
+        self.assertContains(response, f'href="{reverse("painel_consumo")}"')
+        self.assertContains(response, f'href="{reverse("painel_social")}"')
+
+
 class ConsumoPaginaTests(TestCase):
     def test_pagina_renderiza_template_rota_e_menu_atual(self):
         response = self.client.get(
