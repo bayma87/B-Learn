@@ -13,6 +13,11 @@ from appweb.consumo import (
     carregar_dados_consumo,
     validar_dados_consumo,
 )
+from appweb.equipamentos import (
+    calcular_consumo_por_hora,
+    carregar_dados_equipamentos,
+    validar_dados_equipamentos,
+)
 from appweb.recomendacoes import (
     MOTIVO_ECONOMIA_INVALIDA,
     carregar_catalogo_acoes,
@@ -493,6 +498,38 @@ def _dados_consumo(*registros):
     }
 
 
+def _registro_equipamento(
+    id_registro='E1',
+    equipamento_id='EQ1',
+    equipamento='Motor de teste',
+    local='Fabrica de teste',
+    consumo_kwh='10.00',
+    horas_uso='2.00',
+    periodo_inicio='2026-01-01',
+    periodo_fim='2026-01-31',
+    recurso='energia',
+):
+    return {
+        'id_registro': id_registro,
+        'equipamento_id': equipamento_id,
+        'equipamento': equipamento,
+        'local': local,
+        'recurso': recurso,
+        'consumo_kwh': consumo_kwh,
+        'horas_uso': horas_uso,
+        'periodo_inicio': periodo_inicio,
+        'periodo_fim': periodo_fim,
+    }
+
+
+def _dados_equipamentos(*registros):
+    return {
+        'versao': 1,
+        'origem': 'simulada',
+        'registros': list(registros),
+    }
+
+
 class ConsumoDadosTests(TestCase):
     def test_catalogo_real_carrega_energia_e_agua(self):
         dados = carregar_dados_consumo()
@@ -616,6 +653,274 @@ class ConsumoDadosTests(TestCase):
         self.assertEqual(grupos[('energia', 'Fabrica')]['total'], '30.00')
         self.assertEqual(grupos[('energia', 'Escritorio')]['total'], '30.00')
         self.assertEqual(grupos[('agua', 'Fabrica')]['total'], '3.00')
+
+
+class EquipamentosDadosTests(TestCase):
+    def test_catalogo_real_carrega_e_valida_fixtures_simuladas(self):
+        dados = carregar_dados_equipamentos()
+        registros = validar_dados_equipamentos(dados)
+
+        self.assertEqual(dados['origem'], 'simulada')
+        self.assertEqual(len(registros), 4)
+        self.assertEqual(
+            {registro['equipamento_id'] for registro in registros},
+            {'EQ-F2-001', 'EQ-F2-002', 'EQ-F2-003', 'EQ-F2-004'},
+        )
+
+    def test_carregador_rejeita_arquivo_ausente_e_json_invalido(self):
+        caminho = os.path.join(
+            tempfile.gettempdir(), 'equipamentos_f2_inexistente.json'
+        )
+        with self.assertRaisesMessage(ValueError, 'carregar os dados'):
+            carregar_dados_equipamentos(caminho)
+
+        arquivo = tempfile.NamedTemporaryFile(
+            mode='w', encoding='utf-8', suffix='.json', delete=False
+        )
+        arquivo.write('{nao e json')
+        arquivo.close()
+        self.addCleanup(os.unlink, arquivo.name)
+
+        with self.assertRaisesMessage(ValueError, 'carregar os dados'):
+            carregar_dados_equipamentos(arquivo.name)
+
+    def test_lista_vazia_nao_cria_registros(self):
+        self.assertEqual(
+            calcular_consumo_por_hora(_dados_equipamentos()),
+            {'origem': 'simulada', 'grupos': []},
+        )
+
+    def test_exemplo_original_adaptado_retorna_375_kwh_por_hora(self):
+        grupo = calcular_consumo_por_hora(_dados_equipamentos(
+            _registro_equipamento(
+                consumo_kwh='450.00',
+                horas_uso='120.00',
+            )
+        ))['grupos'][0]
+
+        self.assertEqual(grupo['consumo_kwh'], '450.00')
+        self.assertEqual(grupo['horas_uso'], '120.00')
+        self.assertEqual(grupo['consumo_por_hora'], '3.75')
+        self.assertEqual(grupo['unidade_consumo_por_hora'], 'kWh/h')
+        self.assertEqual(grupo['avaliacao'], 'disponivel')
+        self.assertIsNone(grupo['motivo'])
+
+    def test_multiplos_equipamentos_periodos_e_saida_individual_ordenada(self):
+        dados = _dados_equipamentos(
+            _registro_equipamento(
+                id_registro='E2', equipamento_id='EQ2',
+                periodo_inicio='2026-02-01', periodo_fim='2026-02-28',
+            ),
+            _registro_equipamento(
+                id_registro='E1', equipamento_id='EQ1',
+                periodo_inicio='2026-02-01', periodo_fim='2026-02-28',
+            ),
+            _registro_equipamento(
+                id_registro='E3', equipamento_id='EQ1',
+                periodo_inicio='2026-03-01', periodo_fim='2026-03-31',
+            ),
+        )
+
+        grupos = calcular_consumo_por_hora(dados)['grupos']
+
+        self.assertEqual(
+            [(grupo['equipamento_id'], grupo['periodo_inicio']) for grupo in grupos],
+            [('EQ1', '2026-02-01'), ('EQ1', '2026-03-01'), ('EQ2', '2026-02-01')],
+        )
+        self.assertEqual(len(grupos), 3)
+        self.assertNotIn('total', calcular_consumo_por_hora(dados))
+
+    def test_zero_horas_distingue_consumo_zero_de_consumo_positivo(self):
+        grupos = calcular_consumo_por_hora(_dados_equipamentos(
+            _registro_equipamento(
+                id_registro='E1', consumo_kwh='0.00', horas_uso='0.00'
+            ),
+            _registro_equipamento(
+                id_registro='E2', equipamento_id='EQ2',
+                consumo_kwh='25.00', horas_uso='0.00'
+            ),
+        ))['grupos']
+
+        self.assertIsNone(grupos[0]['consumo_por_hora'])
+        self.assertEqual(grupos[0]['avaliacao'], 'indisponivel')
+        self.assertIn('horas de uso positivas', grupos[0]['motivo'])
+        self.assertIsNone(grupos[1]['consumo_por_hora'])
+        self.assertEqual(grupos[1]['avaliacao'], 'indisponivel')
+        self.assertIn('consumo registrado sem horas', grupos[1]['motivo'])
+        self.assertNotIn('desperdício', grupos[1]['motivo'])
+
+    def test_horas_positivas_e_consumo_zero_tem_razao_zero_disponivel(self):
+        grupo = calcular_consumo_por_hora(_dados_equipamentos(
+            _registro_equipamento(consumo_kwh='0.00', horas_uso='4.00')
+        ))['grupos'][0]
+
+        self.assertEqual(grupo['consumo_por_hora'], '0.00')
+        self.assertEqual(grupo['avaliacao'], 'disponivel')
+
+    def test_decimal_e_arredondamento_nao_dependem_do_contexto_externo(self):
+        with localcontext() as contexto:
+            contexto.prec = 6
+            contexto.rounding = ROUND_DOWN
+            grupo = calcular_consumo_por_hora(_dados_equipamentos(
+                _registro_equipamento(
+                    consumo_kwh='1.00', horas_uso='6.00'
+                )
+            ))['grupos'][0]
+
+            self.assertEqual(grupo['consumo_por_hora'], '0.17')
+            self.assertEqual(contexto.prec, 6)
+            self.assertIs(contexto.rounding, ROUND_DOWN)
+
+    def test_validacao_rejeita_duplicacoes_sobreposicoes_e_identidade(self):
+        casos = [
+            (
+                _dados_equipamentos(
+                    _registro_equipamento(),
+                    _registro_equipamento(id_registro='E1'),
+                ),
+                'Identificador repetido',
+            ),
+            (
+                _dados_equipamentos(
+                    _registro_equipamento(),
+                    _registro_equipamento(
+                        id_registro='E2', periodo_inicio='2026-01-31',
+                        periodo_fim='2026-02-28'
+                    ),
+                ),
+                'Períodos sobrepostos',
+            ),
+            (
+                _dados_equipamentos(
+                    _registro_equipamento(),
+                    _registro_equipamento(
+                        id_registro='E2', equipamento='Outro nome',
+                        periodo_inicio='2026-02-01',
+                        periodo_fim='2026-02-28'
+                    ),
+                ),
+                'identidade do equipamento inconsistente',
+            ),
+        ]
+
+        for dados, mensagem in casos:
+            with self.subTest(mensagem=mensagem):
+                with self.assertRaisesMessage(ValueError, mensagem):
+                    validar_dados_equipamentos(dados)
+
+    def test_ids_de_registro_iguais_em_periodos_diferentes_sao_rejeitados(self):
+        dados = _dados_equipamentos(
+            _registro_equipamento(
+                id_registro='E1',
+                periodo_inicio='2026-01-01',
+                periodo_fim='2026-01-31',
+            ),
+            _registro_equipamento(
+                id_registro='E1',
+                periodo_inicio='2026-02-01',
+                periodo_fim='2026-02-28',
+            ),
+        )
+
+        with self.assertRaisesMessage(ValueError, 'Identificador repetido'):
+            validar_dados_equipamentos(dados)
+
+    def test_periodo_repetido_com_ids_diferentes_e_rejeitado(self):
+        dados = _dados_equipamentos(
+            _registro_equipamento(id_registro='E1'),
+            _registro_equipamento(id_registro='E2'),
+        )
+
+        with self.assertRaisesMessage(
+            ValueError, 'período do equipamento repetido'
+        ):
+            validar_dados_equipamentos(dados)
+
+    def test_local_diferente_rejeita_identidade_mesmo_com_periodos_distintos(self):
+        dados = _dados_equipamentos(
+            _registro_equipamento(
+                id_registro='E1',
+                periodo_inicio='2026-01-01',
+                periodo_fim='2026-01-31',
+            ),
+            _registro_equipamento(
+                id_registro='E2',
+                local='Outro local',
+                periodo_inicio='2026-02-01',
+                periodo_fim='2026-02-28',
+            ),
+        )
+
+        with self.assertRaisesMessage(
+            ValueError, 'identidade do equipamento inconsistente'
+        ):
+            validar_dados_equipamentos(dados)
+
+    def test_periodos_consecutivos_sem_dia_compartilhado_sao_aceitos(self):
+        dados = _dados_equipamentos(
+            _registro_equipamento(
+                id_registro='E1',
+                periodo_inicio='2026-01-01',
+                periodo_fim='2026-01-31',
+            ),
+            _registro_equipamento(
+                id_registro='E2',
+                periodo_inicio='2026-02-01',
+                periodo_fim='2026-02-28',
+            ),
+        )
+
+        grupos = calcular_consumo_por_hora(dados)['grupos']
+
+        self.assertEqual(len(grupos), 2)
+        self.assertEqual(
+            [(grupo['id_registro'], grupo['periodo_inicio']) for grupo in grupos],
+            [('E1', '2026-01-01'), ('E2', '2026-02-01')],
+        )
+
+    def test_tipos_de_saida_disponivel_e_indisponivel_sao_explicitos(self):
+        grupos = calcular_consumo_por_hora(_dados_equipamentos(
+            _registro_equipamento(
+                id_registro='E1', consumo_kwh='10.00', horas_uso='4.00'
+            ),
+            _registro_equipamento(
+                id_registro='E2', equipamento_id='EQ2',
+                consumo_kwh='0.00', horas_uso='0.00'
+            ),
+        ))['grupos']
+        disponivel, indisponivel = grupos
+
+        self.assertIsInstance(disponivel['consumo_kwh'], str)
+        self.assertIsInstance(disponivel['horas_uso'], str)
+        self.assertIsInstance(disponivel['consumo_por_hora'], str)
+        self.assertEqual(disponivel['avaliacao'], 'disponivel')
+        self.assertIsNone(disponivel['motivo'])
+
+        self.assertIsInstance(indisponivel['consumo_kwh'], str)
+        self.assertIsInstance(indisponivel['horas_uso'], str)
+        self.assertIsNone(indisponivel['consumo_por_hora'])
+        self.assertEqual(indisponivel['avaliacao'], 'indisponivel')
+        self.assertIsInstance(indisponivel['motivo'], str)
+        self.assertTrue(indisponivel['motivo'])
+
+    def test_validacao_rejeita_contrato_tipos_datas_e_valores_invalidos(self):
+        casos = [
+            ({**_dados_equipamentos(), 'versao': 2}, 'versão'),
+            ({**_dados_equipamentos(), 'origem': 'real'}, 'origem'),
+            ({'versao': 1, 'origem': 'simulada'}, 'Registros'),
+            (_dados_equipamentos(_registro_equipamento(recurso='agua')), 'recurso'),
+            (_dados_equipamentos(_registro_equipamento(consumo_kwh='-1.00')), 'não negativo'),
+            (_dados_equipamentos(_registro_equipamento(horas_uso='NaN')), 'não negativo'),
+            (_dados_equipamentos(_registro_equipamento(consumo_kwh=1.0)), 'não negativo'),
+            (_dados_equipamentos(_registro_equipamento(local='   ')), 'local obrigatório'),
+            (_dados_equipamentos(_registro_equipamento(periodo_inicio='2026-02-30')), 'periodo_inicio inválido'),
+            (_dados_equipamentos(_registro_equipamento(periodo_fim='2025-12-31')), 'período final anterior'),
+        ]
+
+        for dados, mensagem in casos:
+            with self.subTest(mensagem=mensagem):
+                with self.assertRaisesMessage(ValueError, mensagem):
+                    validar_dados_equipamentos(dados)
 
 
 class ConsumoCalculoTests(TestCase):
@@ -927,6 +1232,145 @@ class ConsumoApiTests(TestCase):
             {'erro': 'Não foi possível carregar os indicadores de consumo.'},
         )
         self.assertNotIn('desconhecido', response.content.decode())
+
+
+class EquipamentosApiTests(TestCase):
+    def test_url_efetiva_e_get_retorna_json_do_servico(self):
+        self.assertEqual(
+            reverse('consumo_por_hora_equipamentos'),
+            '/equipamentos/consumo-por-hora',
+        )
+
+        esperado = calcular_consumo_por_hora(
+            carregar_dados_equipamentos()
+        )
+        response = self.client.get(
+            reverse('consumo_por_hora_equipamentos'),
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertEqual(response.json(), esperado)
+
+    def test_get_preserva_identidade_periodos_unidades_e_exemplo_original(self):
+        response = self.client.get(
+            reverse('consumo_por_hora_equipamentos'),
+            secure=True,
+        )
+        dados = response.json()
+
+        self.assertEqual(dados['origem'], 'simulada')
+        self.assertEqual(len(dados['grupos']), 4)
+        primeiro = next(
+            grupo for grupo in dados['grupos']
+            if grupo['equipamento_id'] == 'EQ-F2-001'
+        )
+        self.assertEqual(primeiro['equipamento'], 'Motor Industrial')
+        self.assertEqual(primeiro['local'], 'Fabrica F2')
+        self.assertEqual(primeiro['recurso'], 'energia')
+        self.assertEqual(primeiro['unidade_consumo'], 'kWh')
+        self.assertEqual(primeiro['unidade_horas'], 'h')
+        self.assertEqual(primeiro['unidade_consumo_por_hora'], 'kWh/h')
+        self.assertEqual(primeiro['periodo_inicio'], '2026-10-01')
+        self.assertEqual(primeiro['periodo_fim'], '2026-10-31')
+        self.assertEqual(primeiro['consumo_kwh'], '450.00')
+        self.assertEqual(primeiro['horas_uso'], '120.00')
+        self.assertEqual(primeiro['consumo_por_hora'], '3.75')
+
+    def test_get_preserva_strings_motivos_e_razoes_indisponiveis(self):
+        grupos = self.client.get(
+            reverse('consumo_por_hora_equipamentos'),
+            secure=True,
+        ).json()['grupos']
+        por_id = {grupo['equipamento_id']: grupo for grupo in grupos}
+
+        for grupo in grupos:
+            self.assertIsInstance(grupo['consumo_kwh'], str)
+            self.assertIsInstance(grupo['horas_uso'], str)
+
+        self.assertIsNone(por_id['EQ-F2-003']['consumo_por_hora'])
+        self.assertIsNone(por_id['EQ-F2-004']['consumo_por_hora'])
+        self.assertEqual(por_id['EQ-F2-003']['avaliacao'], 'indisponivel')
+        self.assertEqual(por_id['EQ-F2-004']['avaliacao'], 'indisponivel')
+        self.assertIsInstance(por_id['EQ-F2-003']['motivo'], str)
+        self.assertIsInstance(por_id['EQ-F2-004']['motivo'], str)
+        self.assertIn('horas de uso positivas', por_id['EQ-F2-003']['motivo'])
+        self.assertIn('consumo registrado sem horas', por_id['EQ-F2-004']['motivo'])
+
+    def test_get_preserva_consumo_zero_com_horas_positivas(self):
+        grupo = next(
+            grupo for grupo in self.client.get(
+                reverse('consumo_por_hora_equipamentos'),
+                secure=True,
+            ).json()['grupos']
+            if grupo['equipamento_id'] == 'EQ-F2-002'
+        )
+
+        self.assertEqual(grupo['consumo_kwh'], '0.00')
+        self.assertEqual(grupo['horas_uso'], '80.00')
+        self.assertEqual(grupo['consumo_por_hora'], '0.00')
+        self.assertEqual(grupo['avaliacao'], 'disponivel')
+        self.assertIsNone(grupo['motivo'])
+
+    @patch('appweb.views.carregar_dados_equipamentos')
+    def test_dados_vazios_retorna_grupos_vazios(self, mock_carregar):
+        mock_carregar.return_value = _dados_equipamentos()
+
+        response = self.client.get(
+            reverse('consumo_por_hora_equipamentos'),
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {'origem': 'simulada', 'grupos': []},
+        )
+
+    def test_post_retorna_405(self):
+        response = self.client.post(
+            reverse('consumo_por_hora_equipamentos'),
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 405)
+
+    @patch('appweb.views.carregar_dados_equipamentos')
+    def test_falha_de_carregamento_retorna_erro_generico(self, mock_carregar):
+        mock_carregar.side_effect = ValueError(
+            'detalhe interno do arquivo de equipamentos'
+        )
+
+        response = self.client.get(
+            reverse('consumo_por_hora_equipamentos'),
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(
+            response.json(),
+            {'erro': 'Não foi possível carregar os indicadores de equipamentos.'},
+        )
+        self.assertNotIn('detalhe interno', response.content.decode())
+
+    @patch('appweb.views.carregar_dados_equipamentos')
+    def test_dados_invalidos_retorna_erro_generico(self, mock_carregar):
+        mock_carregar.return_value = _dados_equipamentos(
+            _registro_equipamento(recurso='agua')
+        )
+
+        response = self.client.get(
+            reverse('consumo_por_hora_equipamentos'),
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(
+            response.json(),
+            {'erro': 'Não foi possível carregar os indicadores de equipamentos.'},
+        )
+        self.assertNotIn('recurso deve ser energia', response.content.decode())
 
 
 class ConsumoPaginaTests(TestCase):

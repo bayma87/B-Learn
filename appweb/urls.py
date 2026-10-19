@@ -30,6 +30,11 @@ urlpatterns = [
         name='indicadores_consumo',
     ),
     path(
+        'equipamentos/consumo-por-hora',
+        views.consumo_por_hora_equipamentos,
+        name='consumo_por_hora_equipamentos',
+    ),
+    path(
         'painel-consumo/',
         views.painel_consumo,
         name='painel_consumo',

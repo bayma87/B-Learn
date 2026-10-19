@@ -14,6 +14,10 @@ from .consumo import (
     carregar_dados_consumo,
     calcular_indicadores_consumo,
 )
+from .equipamentos import (
+    carregar_dados_equipamentos,
+    calcular_consumo_por_hora,
+)
 from .models import RegistroResiduo
 from .recomendacoes import gerar_recomendacoes
 from .residuos import calcular_resumo_residuos
@@ -208,6 +212,25 @@ def indicadores_consumo(request):
 
         return JsonResponse(
             {'erro': 'Não foi possível carregar os indicadores de consumo.'},
+            status=500,
+        )
+
+    return JsonResponse(
+        indicadores,
+        json_dumps_params={'ensure_ascii': False},
+    )
+
+
+@require_GET
+def consumo_por_hora_equipamentos(request):
+    try:
+        dados = carregar_dados_equipamentos()
+        indicadores = calcular_consumo_por_hora(dados)
+    except ValueError:
+        logger.exception('Erro ao processar os dados de equipamentos.')
+
+        return JsonResponse(
+            {'erro': 'Não foi possível carregar os indicadores de equipamentos.'},
             status=500,
         )
 
