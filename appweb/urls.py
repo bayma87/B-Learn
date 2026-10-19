@@ -14,4 +14,9 @@ urlpatterns = [
         views.indicadores_sociais,
         name='indicadores_sociais',
     ),
+    path(
+        'recomendacoes',
+        views.recomendacoes_esg,
+        name='recomendacoes',
+    ),
 ]

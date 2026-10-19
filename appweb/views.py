@@ -11,6 +11,7 @@ from django.views.decorators.http import require_GET
 
 from .forms import ContactMessageForm
 from .models import RegistroResiduo
+from .recomendacoes import gerar_recomendacoes
 from .residuos import calcular_resumo_residuos
 from .social import calcular_indicadores_sociais
 
@@ -181,5 +182,28 @@ def indicadores_sociais(request):
 
     return JsonResponse(
         indicadores,
+        json_dumps_params={'ensure_ascii': False},
+    )
+
+
+@require_GET
+def recomendacoes_esg(request):
+    try:
+        recomendacoes = gerar_recomendacoes()
+    except (OSError, UnicodeError, ValueError):
+        logger.exception('Erro ao processar o catálogo de recomendações.')
+
+        return JsonResponse(
+            {'erro': 'Não foi possível carregar as recomendações.'},
+            status=500,
+        )
+
+    return JsonResponse(
+        {
+            'origem': 'simulada',
+            'total': len(recomendacoes),
+            'personalizada_por_indicadores': False,
+            'recomendacoes': recomendacoes,
+        },
         json_dumps_params={'ensure_ascii': False},
     )

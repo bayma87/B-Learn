@@ -1,6 +1,7 @@
 import os
 import tempfile
 from decimal import Decimal
+from unittest.mock import patch
 
 from django.test import TestCase
 from django.urls import reverse
@@ -331,3 +332,104 @@ class RecomendacoesCatalogoRealTests(TestCase):
         # 2500.00 / 450.00 = 5.55... -> 5.6, prioridade Alta
         self.assertEqual(led['payback_meses'], '5.6')
         self.assertEqual(led['prioridade'], 'Alta')
+
+
+class RecomendacoesApiTests(TestCase):
+    def test_get_recomendacoes_retorna_contrato_json(self):
+        response = self.client.get(reverse('recomendacoes'), secure=True)
+
+        self.assertEqual(response.status_code, 200)
+
+        dados = response.json()
+        recomendacoes = dados['recomendacoes']
+
+        self.assertEqual(dados['origem'], 'simulada')
+        self.assertFalse(dados['personalizada_por_indicadores'])
+        self.assertEqual(dados['total'], len(recomendacoes))
+        self.assertEqual(
+            [item['id_acao'] for item in recomendacoes],
+            ['A04', 'A02', 'A01', 'A03', 'A06', 'A05'],
+        )
+
+        for item in recomendacoes:
+            self.assertTrue(item['dados_simulados'])
+            self.assertIsInstance(
+                item['economia_estimada_mensal'], str
+            )
+            self.assertIsInstance(item['investimento_sugerido'], dict)
+            for valor in item['investimento_sugerido'].values():
+                self.assertIsInstance(valor, str)
+
+    def test_payback_no_json_preserva_string_ou_null(self):
+        recomendacoes = gerar_recomendacoes(
+            _catalogo(
+                _acao(id_acao='T1', economia='200.00'),
+                _acao(id_acao='T2', economia='0.00'),
+            )
+        )
+
+        with patch(
+            'appweb.views.gerar_recomendacoes',
+            return_value=recomendacoes,
+        ):
+            response = self.client.get(
+                reverse('recomendacoes'),
+                secure=True,
+            )
+
+        self.assertEqual(response.status_code, 200)
+        itens = response.json()['recomendacoes']
+
+        item_com_payback = next(
+            item for item in itens if item['id_acao'] == 'T1'
+        )
+        item_sem_payback = next(
+            item for item in itens if item['id_acao'] == 'T2'
+        )
+
+        self.assertIsInstance(item_com_payback['payback_meses'], str)
+        self.assertIsNone(item_sem_payback['payback_meses'])
+
+    def test_recomendacoes_nao_aceita_metodo_post(self):
+        response = self.client.post(
+            reverse('recomendacoes'),
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 405)
+
+    @patch('appweb.views.gerar_recomendacoes')
+    def test_falha_de_carregamento_retorna_erro_generico(self, mock_gerar):
+        mock_gerar.side_effect = ValueError(
+            'Não foi possível ler o arquivo secreto do catálogo.'
+        )
+
+        response = self.client.get(
+            reverse('recomendacoes'),
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(
+            response.json(),
+            {'erro': 'Não foi possível carregar as recomendações.'},
+        )
+        self.assertNotIn('secreto', response.content.decode())
+
+    @patch('appweb.views.gerar_recomendacoes')
+    def test_catalogo_invalido_retorna_erro_generico(self, mock_gerar):
+        mock_gerar.side_effect = ValueError(
+            'Identificador repetido: detalhe interno do catálogo.'
+        )
+
+        response = self.client.get(
+            reverse('recomendacoes'),
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(
+            response.json(),
+            {'erro': 'Não foi possível carregar as recomendações.'},
+        )
+        self.assertNotIn('detalhe interno', response.content.decode())
