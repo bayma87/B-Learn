@@ -10,6 +10,10 @@ from django.shortcuts import render, redirect
 from django.views.decorators.http import require_GET
 
 from .forms import ContactMessageForm
+from .consumo import (
+    carregar_dados_consumo,
+    calcular_indicadores_consumo,
+)
 from .models import RegistroResiduo
 from .recomendacoes import gerar_recomendacoes
 from .residuos import calcular_resumo_residuos
@@ -181,6 +185,25 @@ def indicadores_sociais(request):
 
         return JsonResponse(
             {'erro': 'Não foi possível carregar os indicadores sociais.'},
+            status=500,
+        )
+
+    return JsonResponse(
+        indicadores,
+        json_dumps_params={'ensure_ascii': False},
+    )
+
+
+@require_GET
+def indicadores_consumo(request):
+    try:
+        dados = carregar_dados_consumo()
+        indicadores = calcular_indicadores_consumo(dados)
+    except ValueError:
+        logger.exception('Erro ao processar os dados de consumo.')
+
+        return JsonResponse(
+            {'erro': 'Não foi possível carregar os indicadores de consumo.'},
             status=500,
         )
 

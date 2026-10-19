@@ -24,4 +24,9 @@ urlpatterns = [
         views.painel_recomendacoes,
         name='painel_recomendacoes',
     ),
+    path(
+        'consumo/indicadores',
+        views.indicadores_consumo,
+        name='indicadores_consumo',
+    ),
 ]

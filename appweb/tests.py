@@ -1,12 +1,17 @@
 import os
 import tempfile
-from decimal import Decimal
+from decimal import Decimal, ROUND_DOWN, getcontext, localcontext
 from unittest.mock import patch
 
 from django.test import TestCase
 from django.urls import reverse
 
 from appweb.models import AssessmentResult, ContactMessage
+from appweb.consumo import (
+    calcular_indicadores_consumo,
+    carregar_dados_consumo,
+    validar_dados_consumo,
+)
 from appweb.recomendacoes import (
     MOTIVO_ECONOMIA_INVALIDA,
     carregar_catalogo_acoes,
@@ -459,3 +464,465 @@ class RecomendacoesPaginaTests(TestCase):
         )
         self.assertContains(response, 'aria-current="page"')
         self.assertContains(response, f'"{reverse("recomendacoes")}"')
+
+
+def _registro_consumo(
+    id_leitura='C1',
+    recurso='energia',
+    valor='10.00',
+    unidade='kWh',
+    data='2026-01-01',
+    local='Fabrica',
+):
+    return {
+        'id_leitura': id_leitura,
+        'recurso': recurso,
+        'valor': valor,
+        'unidade': unidade,
+        'data': data,
+        'local': local,
+    }
+
+
+def _dados_consumo(*registros):
+    return {
+        'versao': 1,
+        'origem': 'simulada',
+        'registros': list(registros),
+    }
+
+
+class ConsumoDadosTests(TestCase):
+    def test_catalogo_real_carrega_energia_e_agua(self):
+        dados = carregar_dados_consumo()
+        registros = validar_dados_consumo(dados)
+
+        self.assertEqual(len(registros), 9)
+        self.assertEqual(
+            {registro['recurso'] for registro in registros},
+            {'energia', 'agua'},
+        )
+
+    def test_carregador_nao_tem_fallback_para_arquivo_invalido(self):
+        arquivo = tempfile.NamedTemporaryFile(
+            mode='w', encoding='utf-8', suffix='.json', delete=False
+        )
+        arquivo.write('{nao e json')
+        arquivo.close()
+        self.addCleanup(os.unlink, arquivo.name)
+
+        with self.assertRaisesMessage(ValueError, 'carregar os dados'):
+            carregar_dados_consumo(arquivo.name)
+
+    def test_carregador_rejeita_arquivo_inexistente(self):
+        caminho = os.path.join(
+            tempfile.gettempdir(), 'consumo_f1_inexistente.json'
+        )
+
+        with self.assertRaisesMessage(ValueError, 'carregar os dados'):
+            carregar_dados_consumo(caminho)
+
+    def test_estrutura_vazia_e_aceita_sem_fabricar_dados(self):
+        resultado = calcular_indicadores_consumo(_dados_consumo())
+
+        self.assertEqual(resultado, {'origem': 'simulada', 'grupos': []})
+
+    def test_validacao_rejeita_estrutura_e_dados_invalidos(self):
+        casos = [
+            ({**_dados_consumo(), 'versao': 2}, 'versão'),
+            ({'versao': 1, 'origem': 'simulada'}, 'Registros'),
+            (_dados_consumo(_registro_consumo(valor='-1.00')), 'não negativo'),
+            (_dados_consumo(_registro_consumo(valor='NaN')), 'não negativo'),
+            (
+                _dados_consumo(_registro_consumo(recurso=[])),
+                'recurso desconhecido',
+            ),
+            (
+                _dados_consumo(_registro_consumo(recurso={})),
+                'recurso desconhecido',
+            ),
+            (
+                _dados_consumo(_registro_consumo(recurso=None)),
+                'recurso desconhecido',
+            ),
+            (
+                _dados_consumo(_registro_consumo(unidade='m3')),
+                'incompatível',
+            ),
+            (
+                _dados_consumo(_registro_consumo(recurso='outro')),
+                'desconhecido',
+            ),
+            (
+                _dados_consumo(_registro_consumo(data='2026-02-30')),
+                'data inválida',
+            ),
+            (
+                _dados_consumo(_registro_consumo(local='   ')),
+                'local obrigatório',
+            ),
+        ]
+
+        for dados, mensagem in casos:
+            with self.subTest(mensagem=mensagem):
+                with self.assertRaisesMessage(ValueError, mensagem):
+                    validar_dados_consumo(dados)
+
+    def test_rejeita_ids_e_combinacoes_repetidos(self):
+        primeiro = _registro_consumo()
+        segundo = _registro_consumo(
+            id_leitura='C2',
+            data='2026-01-02',
+        )
+
+        with self.assertRaisesMessage(ValueError, 'Identificador repetido'):
+            validar_dados_consumo(
+                _dados_consumo(primeiro, {**segundo, 'id_leitura': 'C1'})
+            )
+
+        with self.assertRaisesMessage(ValueError, 'combinação'):
+            validar_dados_consumo(
+                _dados_consumo(primeiro, {**primeiro, 'id_leitura': 'C2'})
+            )
+
+    def test_separa_recursos_e_locais_sem_misturar_grupos(self):
+        resultado = calcular_indicadores_consumo(
+            _dados_consumo(
+                _registro_consumo(valor='10.00'),
+                _registro_consumo(
+                    id_leitura='C2',
+                    valor='20.00',
+                    data='2026-01-02',
+                ),
+                _registro_consumo(
+                    id_leitura='C3',
+                    recurso='agua',
+                    unidade='m3',
+                    valor='3.00',
+                ),
+                _registro_consumo(
+                    id_leitura='C4',
+                    local='Escritorio',
+                    valor='30.00',
+                ),
+            )
+        )
+
+        grupos = {
+            (grupo['recurso'], grupo['local']): grupo
+            for grupo in resultado['grupos']
+        }
+        self.assertEqual(grupos[('energia', 'Fabrica')]['total'], '30.00')
+        self.assertEqual(grupos[('energia', 'Escritorio')]['total'], '30.00')
+        self.assertEqual(grupos[('agua', 'Fabrica')]['total'], '3.00')
+
+
+class ConsumoCalculoTests(TestCase):
+    def test_valores_originais_de_energia_nao_geram_alertas(self):
+        resultado = calcular_indicadores_consumo(carregar_dados_consumo())
+        energia = next(
+            grupo for grupo in resultado['grupos']
+            if grupo['recurso'] == 'energia'
+        )
+
+        self.assertEqual(energia['total'], '656.60')
+        self.assertEqual(energia['media_por_dia_observado'], '93.80')
+        self.assertEqual(energia['dias_observados'], 7)
+        self.assertEqual(energia['quantidade_alertas'], 0)
+        self.assertEqual(energia['alertas_consumo_elevado'], [])
+        self.assertEqual(energia['avaliacao_alerta'], 'disponivel')
+
+    def test_cenario_sintetico_identifica_alerta_sem_provar_desperdicio(self):
+        registros = [
+            _registro_consumo(
+                id_leitura=f'C{i}',
+                valor='1.00',
+                data=f'2026-01-{i:02d}',
+            )
+            for i in range(1, 10)
+        ]
+        registros.append(
+            _registro_consumo(
+                id_leitura='C10',
+                valor='10.00',
+                data='2026-01-10',
+            )
+        )
+
+        grupo = calcular_indicadores_consumo(
+            _dados_consumo(*registros)
+        )['grupos'][0]
+
+        self.assertEqual(grupo['avaliacao_alerta'], 'disponivel')
+        self.assertEqual(grupo['quantidade_alertas'], 1)
+        self.assertEqual(grupo['alertas_consumo_elevado'][0]['valor'], '10.00')
+
+    def test_alerta_compara_limite_antes_do_arredondamento(self):
+        registros = [
+            _registro_consumo(
+                id_leitura=f'C{i}',
+                valor='1.00',
+                data=f'2026-01-{i:02d}',
+            )
+            for i in range(1, 10)
+        ]
+        registros.append(
+            _registro_consumo(
+                id_leitura='C10',
+                valor='1.01',
+                data='2026-01-10',
+            )
+        )
+
+        grupo = calcular_indicadores_consumo(
+            _dados_consumo(*registros)
+        )['grupos'][0]
+
+        self.assertEqual(grupo['limite_consumo_elevado'], '1.01')
+        self.assertEqual(grupo['quantidade_alertas'], 1)
+
+    def test_uma_leitura_deixa_avaliacao_indisponivel(self):
+        grupo = calcular_indicadores_consumo(
+            _dados_consumo(_registro_consumo(valor='0.00'))
+        )['grupos'][0]
+
+        self.assertEqual(grupo['total'], '0.00')
+        self.assertEqual(grupo['media_por_dia_observado'], '0.00')
+        self.assertIsNone(grupo['desvio_padrao_amostral'])
+        self.assertIsNone(grupo['limite_consumo_elevado'])
+        self.assertIsNone(grupo['quantidade_alertas'])
+        self.assertIsNone(grupo['alertas_consumo_elevado'])
+        self.assertEqual(grupo['avaliacao_alerta'], 'indisponivel')
+        self.assertIn('duas leituras', grupo['motivo_avaliacao'])
+
+    def test_valores_iguais_tem_desvio_zero_e_nenhum_alerta(self):
+        grupo = calcular_indicadores_consumo(
+            _dados_consumo(
+                _registro_consumo(valor='5.00'),
+                _registro_consumo(
+                    id_leitura='C2',
+                    valor='5.00',
+                    data='2026-01-02',
+                ),
+            )
+        )['grupos'][0]
+
+        self.assertEqual(grupo['desvio_padrao_amostral'], '0.00')
+        self.assertEqual(grupo['limite_consumo_elevado'], '5.00')
+        self.assertEqual(grupo['quantidade_alertas'], 0)
+
+    def test_zeros_validos_nao_causam_divisao_por_zero(self):
+        grupo = calcular_indicadores_consumo(
+            _dados_consumo(
+                _registro_consumo(valor='0.00'),
+                _registro_consumo(
+                    id_leitura='C2',
+                    valor='0.00',
+                    data='2026-01-02',
+                ),
+            )
+        )['grupos'][0]
+
+        self.assertEqual(grupo['total'], '0.00')
+        self.assertEqual(grupo['media_por_dia_observado'], '0.00')
+        self.assertEqual(grupo['limite_consumo_elevado'], '0.00')
+        self.assertEqual(grupo['quantidade_alertas'], 0)
+
+    def test_ordena_datas_e_nao_preenche_dias_ausentes(self):
+        grupo = calcular_indicadores_consumo(
+            _dados_consumo(
+                _registro_consumo(
+                    id_leitura='C2',
+                    valor='30.00',
+                    data='2026-01-03',
+                ),
+                _registro_consumo(
+                    id_leitura='C1',
+                    valor='10.00',
+                    data='2026-01-01',
+                ),
+            )
+        )['grupos'][0]
+
+        self.assertEqual(grupo['inicio'], '2026-01-01')
+        self.assertEqual(grupo['fim'], '2026-01-03')
+        self.assertEqual(grupo['dias_observados'], 2)
+        self.assertEqual(grupo['total'], '40.00')
+
+    def test_campos_numericos_sao_strings_e_indisponiveis_sao_null(self):
+        grupos = calcular_indicadores_consumo(
+            _dados_consumo(
+                _registro_consumo(valor='10.00'),
+                _registro_consumo(
+                    id_leitura='C2',
+                    valor='20.00',
+                    data='2026-01-02',
+                ),
+                _registro_consumo(
+                    id_leitura='C3',
+                    valor='5.00',
+                    data='2026-01-03',
+                    local='Escritorio',
+                ),
+            )
+        )['grupos']
+        grupo_com_avaliacao = next(
+            grupo for grupo in grupos if grupo['local'] == 'Fabrica'
+        )
+        grupo_indisponivel = next(
+            grupo for grupo in grupos if grupo['local'] == 'Escritorio'
+        )
+
+        for campo in (
+            'total',
+            'media_por_dia_observado',
+            'desvio_padrao_amostral',
+            'limite_consumo_elevado',
+        ):
+            self.assertIsInstance(grupo_com_avaliacao[campo], str)
+
+        self.assertIsNone(grupo_indisponivel['desvio_padrao_amostral'])
+        self.assertIsNone(grupo_indisponivel['limite_consumo_elevado'])
+        self.assertIsNone(grupo_indisponivel['alertas_consumo_elevado'])
+        self.assertIsNone(grupo_indisponivel['quantidade_alertas'])
+        self.assertIsInstance(grupo_indisponivel['total'], str)
+        self.assertIsInstance(
+            grupo_indisponivel['media_por_dia_observado'],
+            str,
+        )
+
+    def test_calculo_isola_contexto_decimal_externo(self):
+        dados = _dados_consumo(
+            _registro_consumo(valor='1.00'),
+            _registro_consumo(
+                id_leitura='C2',
+                valor='1.01',
+                data='2026-01-02',
+            ),
+        )
+        esperado = calcular_indicadores_consumo(dados)
+
+        with localcontext() as contexto_externo:
+            contexto_externo.prec = 4
+            contexto_externo.rounding = ROUND_DOWN
+            precisao_antes = getcontext().prec
+            arredondamento_antes = getcontext().rounding
+
+            resultado = calcular_indicadores_consumo(dados)
+
+            self.assertEqual(resultado, esperado)
+            self.assertEqual(getcontext().prec, precisao_antes)
+            self.assertEqual(
+                getcontext().rounding,
+                arredondamento_antes,
+            )
+
+
+class ConsumoApiTests(TestCase):
+    def test_get_retorna_json_com_grupos_de_agua_e_energia(self):
+        esperado = calcular_indicadores_consumo(
+            carregar_dados_consumo()
+        )
+
+        response = self.client.get(
+            reverse('indicadores_consumo'),
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), esperado)
+        self.assertEqual(response.json()['origem'], 'simulada')
+        self.assertEqual(
+            {grupo['recurso'] for grupo in response.json()['grupos']},
+            {'agua', 'energia'},
+        )
+
+        for grupo in response.json()['grupos']:
+            for campo in (
+                'total',
+                'media_por_dia_observado',
+                'desvio_padrao_amostral',
+                'limite_consumo_elevado',
+            ):
+                self.assertIsInstance(grupo[campo], str)
+
+    @patch('appweb.views.carregar_dados_consumo')
+    def test_dados_vazios_retorna_grupos_vazios(self, mock_carregar):
+        mock_carregar.return_value = _dados_consumo()
+
+        response = self.client.get(
+            reverse('indicadores_consumo'),
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {
+            'origem': 'simulada',
+            'grupos': [],
+        })
+
+    @patch('appweb.views.carregar_dados_consumo')
+    def test_uma_leitura_preserva_avaliacao_indisponivel(self, mock_carregar):
+        mock_carregar.return_value = _dados_consumo(
+            _registro_consumo(valor='0.00')
+        )
+
+        response = self.client.get(
+            reverse('indicadores_consumo'),
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        grupo = response.json()['grupos'][0]
+        self.assertEqual(grupo['avaliacao_alerta'], 'indisponivel')
+        self.assertIsNone(grupo['desvio_padrao_amostral'])
+        self.assertIsNone(grupo['limite_consumo_elevado'])
+        self.assertIsNone(grupo['alertas_consumo_elevado'])
+        self.assertIsNone(grupo['quantidade_alertas'])
+
+    def test_post_retorna_405(self):
+        response = self.client.post(
+            reverse('indicadores_consumo'),
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 405)
+
+    @patch('appweb.views.carregar_dados_consumo')
+    def test_falha_de_carregamento_retorna_erro_generico(
+        self,
+        mock_carregar,
+    ):
+        mock_carregar.side_effect = ValueError(
+            'detalhe interno do arquivo de consumo'
+        )
+
+        response = self.client.get(
+            reverse('indicadores_consumo'),
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(
+            response.json(),
+            {'erro': 'Não foi possível carregar os indicadores de consumo.'},
+        )
+        self.assertNotIn('detalhe interno', response.content.decode())
+
+    @patch('appweb.views.carregar_dados_consumo')
+    def test_dados_invalidos_retorna_erro_generico(self, mock_carregar):
+        mock_carregar.return_value = _dados_consumo(
+            _registro_consumo(recurso='desconhecido')
+        )
+
+        response = self.client.get(
+            reverse('indicadores_consumo'),
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(
+            response.json(),
+            {'erro': 'Não foi possível carregar os indicadores de consumo.'},
+        )
+        self.assertNotIn('desconhecido', response.content.decode())
