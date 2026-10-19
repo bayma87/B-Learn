@@ -1,0 +1,48 @@
+{
+  "versao": 1,
+  "origem": "simulada",
+  "registros": [
+    {
+      "id_acao": "A01",
+      "nome": "Substituição de iluminação por lâmpadas LED",
+      "pilar": "E (Ambiental)",
+      "custo": "2500.00",
+      "economia_mensal": "450.00"
+    },
+    {
+      "id_acao": "A02",
+      "nome": "Sistema de desligamento automático de equipamentos",
+      "pilar": "E (Ambiental)",
+      "custo": "4000.00",
+      "economia_mensal": "800.00"
+    },
+    {
+      "id_acao": "A03",
+      "nome": "Reparação de fugas na rede de água",
+      "pilar": "E (Ambiental)",
+      "custo": "1200.00",
+      "economia_mensal": "300.00"
+    },
+    {
+      "id_acao": "A04",
+      "nome": "Manutenção preventiva de máquinas e equipamentos",
+      "pilar": "E (Ambiental)",
+      "custo": "6000.00",
+      "economia_mensal": "950.00"
+    },
+    {
+      "id_acao": "A05",
+      "nome": "Implementação de recolha seletiva de resíduos",
+      "pilar": "E (Ambiental)",
+      "custo": "800.00",
+      "economia_mensal": "150.00"
+    },
+    {
+      "id_acao": "A06",
+      "nome": "Formação em segurança do trabalho e uso de EPIs",
+      "pilar": "S (Social)",
+      "custo": "1500.00",
+      "economia_mensal": "200.00"
+    }
+  ]
+}
