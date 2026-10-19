@@ -168,6 +168,10 @@ def painel_recomendacoes(request):
     return render(request, 'appweb/painel_recomendacoes.html')
 
 
+def painel_consumo(request):
+    return render(request, 'appweb/painel_consumo.html')
+
+
 @require_GET
 def indicadores_sociais(request):
     caminho = (

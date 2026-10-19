@@ -1,10 +1,11 @@
 import os
+import re
 import tempfile
 from decimal import Decimal, ROUND_DOWN, getcontext, localcontext
 from unittest.mock import patch
 
 from django.test import TestCase
-from django.urls import reverse
+from django.urls import resolve, reverse
 
 from appweb.models import AssessmentResult, ContactMessage
 from appweb.consumo import (
@@ -926,3 +927,40 @@ class ConsumoApiTests(TestCase):
             {'erro': 'Não foi possível carregar os indicadores de consumo.'},
         )
         self.assertNotIn('desconhecido', response.content.decode())
+
+
+class ConsumoPaginaTests(TestCase):
+    def test_pagina_renderiza_template_rota_e_menu_atual(self):
+        response = self.client.get(
+            reverse('painel_consumo'),
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(
+            response,
+            'appweb/painel_consumo.html',
+        )
+        self.assertEqual(
+            resolve('/painel-consumo/').url_name,
+            'painel_consumo',
+        )
+
+        self.assertContains(response, 'Consumo de água e energia')
+        self.assertContains(response, 'dados simulados')
+        self.assertContains(response, 'diário total')
+        self.assertContains(response, 'não uma leitura acumulada de medidor')
+        self.assertContains(response, 'média + 2 desvios-padrão amostrais')
+        self.assertContains(response, 'consumo elevado')
+        self.assertContains(response, 'não desperdício comprovado')
+        self.assertContains(
+            response,
+            f'"{reverse("indicadores_consumo")}"',
+        )
+
+        pagina_url = re.escape(reverse('painel_consumo'))
+        self.assertRegex(
+            response.content.decode('utf-8'),
+            rf'<a href="{pagina_url}"\s+aria-current="page">\s*'
+            r'Consumo\s*</a>',
+        )

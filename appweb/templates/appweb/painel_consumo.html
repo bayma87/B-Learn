@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consumo de água e energia | ESG Impact</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #2b0d2f;
+            color: #f3e7ef;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        header {
+            padding: 20px 24px;
+            background: #07080c;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        a {
+            color: #f3e7ef;
+        }
+
+        a:focus-visible {
+            outline: 2px solid #f2d7af;
+            outline-offset: 4px;
+        }
+
+        .marca {
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-decoration: none;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 48px 24px;
+        }
+
+        h1 {
+            margin: 0 0 12px;
+            font-size: 2rem;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 1.25rem;
+        }
+
+        .introducao,
+        .aviso,
+        .estado {
+            line-height: 1.6;
+        }
+
+        .introducao {
+            margin: 0 0 12px;
+        }
+
+        .aviso {
+            margin: 0 0 32px;
+            padding: 16px 20px;
+            background: rgba(242, 215, 175, 0.08);
+            border-left: 3px solid #f2d7af;
+            border-radius: 8px;
+        }
+
+        .estado {
+            margin: 0 0 28px;
+        }
+
+        .lista-cabecalho {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .lista-grupos {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .grupo {
+            padding: 24px;
+            background: #1b081f;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 14px;
+            overflow-wrap: anywhere;
+        }
+
+        .grupo h3 {
+            margin: 0 0 8px;
+            font-size: 1.2rem;
+            line-height: 1.4;
+        }
+
+        .identificacao,
+        .periodo {
+            margin: 0 0 18px;
+            color: #f2d7af;
+        }
+
+        .periodo {
+            color: rgba(243, 231, 239, 0.78);
+        }
+
+        .dados-grupo {
+            display: grid;
+            gap: 14px;
+            margin: 0;
+        }
+
+        .dado {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .dado dt {
+            color: rgba(243, 231, 239, 0.78);
+        }
+
+        .dado dd {
+            margin: 0;
+            color: #f2d7af;
+            font-weight: 700;
+            text-align: right;
+        }
+
+        .avaliacao,
+        .alertas {
+            margin: 24px 0 0;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.14);
+            line-height: 1.6;
+        }
+
+        .avaliacao-indisponivel {
+            color: #ffcf9f;
+        }
+
+        .alertas-detectados {
+            color: #ffb2b2;
+        }
+
+        .lista-alertas {
+            margin: 12px 0 0;
+            padding-left: 20px;
+        }
+
+        .lista-alertas li {
+            margin-bottom: 6px;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        @media (max-width: 560px) {
+            .lista-cabecalho,
+            .dado {
+                display: block;
+            }
+
+            .lista-cabecalho h2 {
+                margin-bottom: 8px;
+            }
+
+            .dado dd {
+                margin-top: 4px;
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        {% include 'appweb/menu_lateral.html' with pagina_atual='consumo' %}
+
+        <a class="marca" href="{% url 'home' %}">ESG IMPACT</a>
+    </header>
+
+    <main>
+        <h1>Consumo de água e energia</h1>
+        <p class="introducao">
+            Acompanhe os consumos diários observados por recurso e local.
+        </p>
+
+        <p class="aviso">
+            Estes são dados simulados. Cada registro representa o consumo
+            diário total, não uma leitura acumulada de medidor. Cada grupo
+            possui seu próprio período; dias ausentes não são preenchidos com
+            zero. A regra de referência é a média + 2 desvios-padrão amostrais.
+            Um alerta indica consumo elevado, não desperdício comprovado.
+            O limite usa precisão maior que a apresentação e pode parecer
+            igual a uma leitura depois do arredondamento.
+        </p>
+
+        <p id="mensagem-dados" class="estado" role="status" aria-live="polite">
+            Carregando indicadores de consumo...
+        </p>
+
+        <section aria-labelledby="titulo-grupos">
+            <div class="lista-cabecalho">
+                <h2 id="titulo-grupos">Consumo por recurso e local</h2>
+                <span id="total-grupos"></span>
+            </div>
+
+            <div id="lista-grupos" class="lista-grupos"></div>
+        </section>
+    </main>
+
+    <script>
+        const mensagemDados = document.getElementById('mensagem-dados');
+        const totalGrupos = document.getElementById('total-grupos');
+        const listaGrupos = document.getElementById('lista-grupos');
+
+        const nomesRecursos = {
+            agua: 'Água',
+            energia: 'Energia'
+        };
+
+        function formatarDecimal(valor) {
+            if (typeof valor !== 'string' || !/^\d+(\.\d+)?$/.test(valor)) {
+                throw new Error('Número de consumo inválido.');
+            }
+
+            const partes = valor.split('.');
+            const inteiro = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return partes.length === 1
+                ? inteiro
+                : inteiro + ',' + partes[1];
+        }
+
+        function formatarData(valor) {
+            if (typeof valor !== 'string') {
+                throw new Error('Data de consumo inválida.');
+            }
+
+            const partes = valor.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            if (!partes) {
+                throw new Error('Data de consumo inválida.');
+            }
+
+            return partes[3] + '/' + partes[2] + '/' + partes[1];
+        }
+
+        function formatarUnidade(valor) {
+            if (valor === 'm3') {
+                return 'm³';
+            }
+
+            if (valor === 'kWh') {
+                return valor;
+            }
+
+            throw new Error('Unidade de consumo inválida.');
+        }
+
+        function criarDado(rotulo, valor) {
+            const item = document.createElement('div');
+            item.className = 'dado';
+
+            const titulo = document.createElement('dt');
+            titulo.textContent = rotulo;
+
+            const conteudo = document.createElement('dd');
+            conteudo.textContent = valor;
+
+            item.append(titulo, conteudo);
+            return item;
+        }
+
+        function validarGrupo(grupo) {
+            if (
+                !grupo || typeof grupo !== 'object' ||
+                !Object.prototype.hasOwnProperty.call(nomesRecursos, grupo.recurso) ||
+                typeof grupo.unidade !== 'string' ||
+                typeof grupo.local !== 'string' ||
+                typeof grupo.inicio !== 'string' ||
+                typeof grupo.fim !== 'string' ||
+                !Number.isInteger(grupo.dias_observados) ||
+                grupo.dias_observados < 1 ||
+                typeof grupo.total !== 'string' ||
+                typeof grupo.media_por_dia_observado !== 'string' ||
+                (grupo.desvio_padrao_amostral !== null &&
+                    typeof grupo.desvio_padrao_amostral !== 'string') ||
+                (grupo.limite_consumo_elevado !== null &&
+                    typeof grupo.limite_consumo_elevado !== 'string') ||
+                !['disponivel', 'indisponivel'].includes(
+                    grupo.avaliacao_alerta
+                ) ||
+                (grupo.motivo_avaliacao !== null &&
+                    typeof grupo.motivo_avaliacao !== 'string') ||
+                (grupo.alertas_consumo_elevado !== null &&
+                    !Array.isArray(grupo.alertas_consumo_elevado)) ||
+                (grupo.quantidade_alertas !== null &&
+                    (!Number.isInteger(grupo.quantidade_alertas) ||
+                        grupo.quantidade_alertas < 0))
+            ) {
+                throw new Error('A API retornou um grupo inválido.');
+            }
+
+            if (grupo.avaliacao_alerta === 'disponivel') {
+                if (
+                    grupo.desvio_padrao_amostral === null ||
+                    grupo.limite_consumo_elevado === null ||
+                    grupo.alertas_consumo_elevado === null ||
+                    grupo.quantidade_alertas === null
+                ) {
+                    throw new Error('A avaliação do grupo está incompleta.');
+                }
+            } else if (
+                !grupo.motivo_avaliacao ||
+                grupo.desvio_padrao_amostral !== null ||
+                grupo.limite_consumo_elevado !== null ||
+                grupo.alertas_consumo_elevado !== null ||
+                grupo.quantidade_alertas !== null
+            ) {
+                throw new Error('A avaliação indisponível está inválida.');
+            }
+
+            if (grupo.alertas_consumo_elevado) {
+                grupo.alertas_consumo_elevado.forEach(function (alerta) {
+                    if (
+                        !alerta || typeof alerta !== 'object' ||
+                        typeof alerta.data !== 'string' ||
+                        typeof alerta.valor !== 'string'
+                    ) {
+                        throw new Error('A API retornou um alerta inválido.');
+                    }
+                });
+            }
+        }
+
+        function criarGrupo(grupo) {
+            validarGrupo(grupo);
+
+            const artigo = document.createElement('article');
+            artigo.className = 'grupo';
+
+            const titulo = document.createElement('h3');
+            titulo.textContent = nomesRecursos[grupo.recurso];
+
+            const identificacao = document.createElement('p');
+            identificacao.className = 'identificacao';
+            identificacao.textContent =
+                'Unidade: ' + formatarUnidade(grupo.unidade) +
+                ' | Local: ' + grupo.local;
+
+            const periodo = document.createElement('p');
+            periodo.className = 'periodo';
+            periodo.textContent =
+                'Período deste grupo: ' + formatarData(grupo.inicio) +
+                ' a ' + formatarData(grupo.fim) +
+                ' (' + grupo.dias_observados.toLocaleString('pt-BR') +
+                ' dias observados)';
+
+            const dados = document.createElement('dl');
+            dados.className = 'dados-grupo';
+            dados.append(
+                criarDado('Consumo total', formatarDecimal(grupo.total) +
+                    ' ' + formatarUnidade(grupo.unidade)),
+                criarDado(
+                    'Média por dia observado',
+                    formatarDecimal(grupo.media_por_dia_observado) +
+                        ' ' + formatarUnidade(grupo.unidade)
+                ),
+                criarDado(
+                    'Limite de consumo elevado',
+                    grupo.limite_consumo_elevado === null
+                        ? 'Indisponível'
+                        : formatarDecimal(grupo.limite_consumo_elevado) +
+                            ' ' + formatarUnidade(grupo.unidade)
+                ),
+                criarDado(
+                    'Quantidade de alertas',
+                    grupo.quantidade_alertas === null
+                        ? 'Indisponível'
+                        : grupo.quantidade_alertas.toLocaleString('pt-BR')
+                )
+            );
+
+            artigo.append(titulo, identificacao, periodo, dados);
+
+            const avaliacao = document.createElement('div');
+            avaliacao.className = 'avaliacao';
+
+            if (grupo.avaliacao_alerta === 'indisponivel') {
+                avaliacao.classList.add('avaliacao-indisponivel');
+                avaliacao.textContent =
+                    'Avaliação de alertas indisponível: ' +
+                    grupo.motivo_avaliacao;
+            } else if (grupo.quantidade_alertas === 0) {
+                avaliacao.textContent =
+                    'Nenhuma leitura acima do limite calculado.';
+            } else {
+                avaliacao.classList.add('alertas-detectados');
+                avaliacao.textContent =
+                    'Leituras acima do limite calculado: ' +
+                    grupo.quantidade_alertas.toLocaleString('pt-BR');
+            }
+
+            artigo.appendChild(avaliacao);
+
+            if (
+                grupo.avaliacao_alerta === 'disponivel' &&
+                grupo.alertas_consumo_elevado.length > 0
+            ) {
+                const tituloAlertas = document.createElement('p');
+                tituloAlertas.className = 'alertas';
+                tituloAlertas.textContent = 'Alertas por data e valor:';
+
+                const lista = document.createElement('ul');
+                lista.className = 'lista-alertas';
+                grupo.alertas_consumo_elevado.forEach(function (alerta) {
+                    const item = document.createElement('li');
+                    item.textContent =
+                        formatarData(alerta.data) + ': ' +
+                        formatarDecimal(alerta.valor) + ' ' +
+                        formatarUnidade(grupo.unidade);
+                    lista.appendChild(item);
+                });
+
+                artigo.append(tituloAlertas, lista);
+            }
+
+            return artigo;
+        }
+
+        function mostrarErro(mensagem) {
+            listaGrupos.replaceChildren();
+            totalGrupos.textContent = '';
+            mensagemDados.textContent = mensagem;
+        }
+
+        async function carregarConsumo() {
+            try {
+                const resposta = await fetch(
+                    "{% url 'indicadores_consumo' %}",
+                    { cache: 'no-store' }
+                );
+
+                if (!resposta.ok) {
+                    throw new Error('Não foi possível consultar a API.');
+                }
+
+                const dados = await resposta.json();
+                if (
+                    !dados || typeof dados !== 'object' ||
+                    dados.origem !== 'simulada' ||
+                    !Array.isArray(dados.grupos)
+                ) {
+                    throw new Error('A API retornou uma estrutura inválida.');
+                }
+
+                listaGrupos.replaceChildren();
+                dados.grupos.forEach(function (grupo) {
+                    listaGrupos.appendChild(criarGrupo(grupo));
+                });
+
+                if (dados.grupos.length === 0) {
+                    totalGrupos.textContent = '';
+                    mensagemDados.textContent =
+                        'Nenhum grupo de consumo disponível no momento.';
+                    return;
+                }
+
+                totalGrupos.textContent =
+                    dados.grupos.length.toLocaleString('pt-BR') +
+                    ' grupos';
+                mensagemDados.textContent =
+                    'Dados simulados carregados. Cada cartão mantém seu próprio período.';
+            } catch (erro) {
+                console.error(erro);
+                mostrarErro('Não foi possível carregar os indicadores de consumo.');
+            }
+        }
+
+        carregarConsumo();
+    </script>
+</body>
+</html>

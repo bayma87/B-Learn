@@ -178,6 +178,11 @@
             Resíduos
         </a>
 
+        <a href="{% url 'painel_consumo' %}"
+           {% if pagina_atual == 'consumo' %}aria-current="page"{% endif %}>
+            Consumo
+        </a>
+
         <a href="{% url 'painel_social' %}"
            {% if pagina_atual == 'social' %}aria-current="page"{% endif %}>
             Social
