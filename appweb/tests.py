@@ -1,6 +1,9 @@
 import os
 import re
 import tempfile
+import copy
+import json
+from pathlib import Path
 from decimal import Decimal, ROUND_DOWN, getcontext, localcontext
 from unittest.mock import patch
 
@@ -24,6 +27,9 @@ from appweb.recomendacoes import (
     gerar_recomendacoes,
     validar_catalogo_acoes,
 )
+from appweb.residuos import calcular_resumo_residuos
+from appweb.social import calcular_indicadores_sociais
+from appweb.sugestoes import selecionar_sugestoes_orientadas
 
 
 class AssessmentResultTests(TestCase):
@@ -446,6 +452,303 @@ class RecomendacoesApiTests(TestCase):
         self.assertNotIn('detalhe interno', response.content.decode())
 
 
+class SugestoesOrientadasTests(TestCase):
+    def _acoes(self):
+        return gerar_recomendacoes(carregar_catalogo_acoes())
+
+    def test_seleciona_a05_com_residuo_nao_reciclado_positivo(self):
+        resultado = selecionar_sugestoes_orientadas(
+            self._acoes(),
+            _indicadores_sociais_teste(),
+            _indicadores_residuos_teste('0.01'),
+        )
+
+        self.assertEqual(
+            [item['id_acao'] for item in resultado['sugestoes_orientadas']],
+            ['A05'],
+        )
+        sugestao = resultado['sugestoes_orientadas'][0]
+        self.assertEqual(
+            sugestao['regra_aplicada'],
+            'A05_quantidade_nao_reciclada_positiva',
+        )
+        self.assertIn('não afirma que toda essa quantidade', sugestao['justificativa'])
+        self.assertEqual(
+            sugestao['evidencias'][0]['escopo'],
+            'agregado',
+        )
+        self.assertEqual(
+            sugestao['evidencias'][0]['valores_observados']['nao_reciclado_kg'],
+            '0.01',
+        )
+
+    def test_residuo_nao_reciclado_zero_nao_seleciona_a05(self):
+        resultado = selecionar_sugestoes_orientadas(
+            self._acoes(),
+            _indicadores_sociais_teste(),
+            _indicadores_residuos_teste('0.00'),
+        )
+
+        self.assertEqual(resultado['sugestoes_orientadas'], [])
+        self.assertEqual(
+            resultado['avaliacao_fontes']['residuos']['situacao'],
+            'avaliada',
+        )
+
+    def test_seleciona_a06_somente_com_status_vermelho(self):
+        for status, alertas, esperado in (
+            ('verde', 0, []),
+            ('amarelo', 3, []),
+            ('vermelho', 4, ['A06']),
+        ):
+            with self.subTest(status=status):
+                resultado = selecionar_sugestoes_orientadas(
+                    self._acoes(),
+                    _indicadores_sociais_teste(status, alertas),
+                    _indicadores_residuos_teste(),
+                )
+
+                self.assertEqual(
+                    [
+                        item['id_acao']
+                        for item in resultado['sugestoes_orientadas']
+                    ],
+                    esperado,
+                )
+                self.assertEqual(
+                    resultado['avaliacao_fontes']['social']['situacao'],
+                    'avaliada',
+                )
+
+    def test_justificativas_nao_atribuem_causa_ou_reciclabilidade(self):
+        resultado = selecionar_sugestoes_orientadas(
+            self._acoes(),
+            _indicadores_sociais_teste('vermelho', 4),
+            _indicadores_residuos_teste('2.00'),
+        )
+        por_id = {
+            item['id_acao']: item
+            for item in resultado['sugestoes_orientadas']
+        }
+
+        self.assertIn('não afirma que toda essa quantidade seja reciclável', por_id['A05']['justificativa'])
+        self.assertIn('não atribui a causa dos alertas', por_id['A06']['justificativa'])
+
+    def test_fontes_sem_dados_e_indisponivel_sao_distintas(self):
+        resultado = selecionar_sugestoes_orientadas(
+            self._acoes(),
+            None,
+            {'situacao': 'indisponivel', 'motivo': 'fonte indisponível'},
+        )
+
+        self.assertEqual(
+            resultado['avaliacao_fontes']['social'],
+            {'situacao': 'sem_dados'},
+        )
+        self.assertEqual(
+            resultado['avaliacao_fontes']['residuos'],
+            {
+                'situacao': 'indisponivel',
+                'motivo': 'fonte indisponível',
+            },
+        )
+        self.assertEqual(resultado['sugestoes_orientadas'], [])
+
+    def test_a01_a04_nao_sao_selecionadas_automaticamente(self):
+        resultado = selecionar_sugestoes_orientadas(
+            self._acoes(),
+            _indicadores_sociais_teste('vermelho', 4),
+            _indicadores_residuos_teste('2.00'),
+        )
+
+        ids = {
+            item['id_acao'] for item in resultado['sugestoes_orientadas']
+        }
+        self.assertEqual(ids, {'A05', 'A06'})
+        self.assertTrue(ids.isdisjoint({'A01', 'A02', 'A03', 'A04'}))
+
+    def test_preserva_financeiro_ordem_e_entradas(self):
+        acoes = self._acoes()
+        acoes_reordenadas = [
+            next(acao for acao in acoes if acao['id_acao'] == id_acao)
+            for id_acao in ('A06', 'A01', 'A05')
+        ]
+        acoes_antes = copy.deepcopy(acoes_reordenadas)
+        social = _indicadores_sociais_teste('vermelho', 4)
+        residuos = _indicadores_residuos_teste('2.00')
+        social_antes = copy.deepcopy(social)
+        residuos_antes = copy.deepcopy(residuos)
+
+        resultado = selecionar_sugestoes_orientadas(
+            acoes_reordenadas,
+            social,
+            residuos,
+        )
+
+        self.assertEqual(
+            [item['id_acao'] for item in resultado['sugestoes_orientadas']],
+            ['A06', 'A05'],
+        )
+        sugestoes = {
+            item['id_acao']: item
+            for item in resultado['sugestoes_orientadas']
+        }
+        self.assertEqual(
+            sugestoes['A06']['investimento_sugerido'],
+            next(acao for acao in acoes_reordenadas if acao['id_acao'] == 'A06')['investimento_sugerido'],
+        )
+        self.assertEqual(
+            sugestoes['A06']['payback_meses'],
+            next(acao for acao in acoes_reordenadas if acao['id_acao'] == 'A06')['payback_meses'],
+        )
+        acao_original = next(
+            acao for acao in acoes_reordenadas if acao['id_acao'] == 'A06'
+        )
+        for campo, valor in acao_original.items():
+            self.assertEqual(sugestoes['A06'][campo], valor)
+        self.assertEqual(sugestoes['A06']['natureza_financeira'], 'estimativa_do_catalogo')
+        self.assertEqual(acoes_reordenadas, acoes_antes)
+        self.assertEqual(social, social_antes)
+        self.assertEqual(residuos, residuos_antes)
+
+    def test_contrato_real_tem_fontes_agregadas_sem_local_ou_periodo(self):
+        base = Path(__file__).parent / 'dados'
+        dados_social = json.loads(
+            (base / 'social.json').read_text(encoding='utf-8')
+        )
+        dados_residuos = json.loads(
+            (base / 'residuos.json').read_text(encoding='utf-8')
+        )
+        indicadores_social = calcular_indicadores_sociais(dados_social)
+        indicadores_residuos = calcular_resumo_residuos(dados_residuos)
+
+        resultado = selecionar_sugestoes_orientadas(
+            self._acoes(), indicadores_social, indicadores_residuos
+        )
+
+        self.assertEqual(
+            resultado['avaliacao_fontes']['social']['escopo'],
+            'agregado',
+        )
+        self.assertEqual(
+            resultado['avaliacao_fontes']['residuos']['escopo'],
+            'agregado',
+        )
+        for sugestao in resultado['sugestoes_orientadas']:
+            evidencia = sugestao['evidencias'][0]
+            self.assertEqual(evidencia['escopo'], 'agregado')
+            self.assertNotIn('local', evidencia)
+            self.assertNotIn('periodo_inicio', evidencia)
+            self.assertNotIn('periodo_fim', evidencia)
+
+    def test_contrato_invalido_nao_vira_sem_dados(self):
+        casos = [
+            (
+                None,
+                _indicadores_sociais_teste(),
+                _indicadores_residuos_teste(),
+                'lista',
+            ),
+            (
+                self._acoes(),
+                {'origem': 'simulada'},
+                _indicadores_residuos_teste(),
+                'Social',
+            ),
+            (
+                self._acoes(),
+                _indicadores_sociais_teste(),
+                {'origem': 'simulada'},
+                'Resíduos',
+            ),
+            (
+                self._acoes(),
+                _indicadores_sociais_teste(),
+                _indicadores_residuos_teste('muita'),
+                'decimal',
+            ),
+            (
+                self._acoes(),
+                _indicadores_sociais_teste('azul', 0),
+                _indicadores_residuos_teste(),
+                'status',
+            ),
+            (
+                self._acoes(),
+                {'situacao': 'indisponivel'},
+                _indicadores_residuos_teste(),
+                'indisponibilidade',
+            ),
+        ]
+
+        for acoes, social, residuos, mensagem in casos:
+            with self.subTest(mensagem=mensagem):
+                with self.assertRaises(ValueError):
+                    selecionar_sugestoes_orientadas(
+                        acoes,
+                        social,
+                        residuos,
+                    )
+
+    def test_status_social_com_lista_objeto_ou_null_retorna_value_error(self):
+        for status in ([], {}, None):
+            with self.subTest(status=status):
+                social = _indicadores_sociais_teste()
+                social['total']['status'] = status
+
+                with self.assertRaisesMessage(
+                    ValueError, 'status inválido'
+                ):
+                    selecionar_sugestoes_orientadas(
+                        self._acoes(),
+                        social,
+                        _indicadores_residuos_teste(),
+                    )
+
+    def test_uma_evidencia_por_fonte_agregada_sem_multiplicar_financeiro(self):
+        resultado = selecionar_sugestoes_orientadas(
+            self._acoes(),
+            _indicadores_sociais_teste('vermelho', 4),
+            _indicadores_residuos_teste('2.00'),
+        )
+
+        for sugestao in resultado['sugestoes_orientadas']:
+            self.assertEqual(len(sugestao['evidencias']), 1)
+            self.assertIsInstance(
+                sugestao['economia_estimada_mensal'], str
+            )
+            self.assertIsInstance(sugestao['investimento_sugerido'], dict)
+
+    def test_acao_financeira_malformada_e_rejeitada(self):
+        acoes = self._acoes()
+        acoes[0]['id_acao'] = ''
+
+        with self.assertRaisesMessage(ValueError, 'id_acao obrigatório'):
+            selecionar_sugestoes_orientadas(
+                acoes,
+                _indicadores_sociais_teste(),
+                _indicadores_residuos_teste(),
+            )
+
+    def test_id_acao_com_espacos_nas_extremidades_e_rejeitado_sem_normalizar(self):
+        acoes = self._acoes()
+        acoes_antes = copy.deepcopy(acoes)
+        entrada_invalida = copy.deepcopy(acoes)
+        entrada_invalida[0]['id_acao'] = ' A05 '
+
+        with self.assertRaisesMessage(
+            ValueError, 'id_acao não pode ter espaços'
+        ):
+            selecionar_sugestoes_orientadas(
+                entrada_invalida,
+                _indicadores_sociais_teste(),
+                _indicadores_residuos_teste(),
+            )
+
+        self.assertEqual(acoes, acoes_antes)
+        self.assertEqual(entrada_invalida[0]['id_acao'], ' A05 ')
+
+
 class RecomendacoesPaginaTests(TestCase):
     def test_pagina_de_recomendacoes_renderiza_com_menu_e_api(self):
         response = self.client.get(
@@ -527,6 +830,36 @@ def _dados_equipamentos(*registros):
         'versao': 1,
         'origem': 'simulada',
         'registros': list(registros),
+    }
+
+
+def _indicadores_sociais_teste(status='verde', alertas=0):
+    return {
+        'origem': 'simulada',
+        'unidade_horas': 'h',
+        'total': {
+            'alertas_seguranca': alertas,
+            'horas_uso': '0.00',
+            'status': status,
+        },
+        'por_dia': [],
+        'por_mes': [],
+    }
+
+
+def _indicadores_residuos_teste(nao_reciclado='0.00'):
+    return {
+        'origem': 'simulada',
+        'unidade': 'kg',
+        'total': {
+            'total_kg': '10.00',
+            'reciclado_kg': '10.00',
+            'nao_reciclado_kg': nao_reciclado,
+            'taxa_reciclagem': '100.0',
+            'tem_quantidade': True,
+        },
+        'por_dia': [],
+        'por_mes': [],
     }
 
 
