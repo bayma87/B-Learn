@@ -14,6 +14,7 @@ from .consumo import (
     carregar_dados_consumo,
     calcular_indicadores_consumo,
 )
+from .comparativos import adicionar_comparativo
 from .equipamentos import (
     carregar_dados_equipamentos,
     calcular_consumo_por_hora,
@@ -279,6 +280,14 @@ def recomendacoes_esg(request):
             indicadores_social,
             indicadores_residuos,
         )
+        sugestoes_orientadas = [
+            adicionar_comparativo(
+                sugestao,
+                indicadores_social,
+                indicadores_residuos,
+            )
+            for sugestao in sugestoes['sugestoes_orientadas']
+        ]
     except (OSError, UnicodeError, ValueError):
         logger.exception('Erro ao processar o catálogo de recomendações.')
 
@@ -293,7 +302,7 @@ def recomendacoes_esg(request):
             'total': len(recomendacoes),
             'personalizada_por_indicadores': False,
             'recomendacoes': recomendacoes,
-            'sugestoes_orientadas': sugestoes['sugestoes_orientadas'],
+            'sugestoes_orientadas': sugestoes_orientadas,
             'avaliacao_fontes': sugestoes['avaliacao_fontes'],
         },
         json_dumps_params={'ensure_ascii': False},

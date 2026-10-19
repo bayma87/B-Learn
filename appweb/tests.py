@@ -16,6 +16,9 @@ from appweb.consumo import (
     carregar_dados_consumo,
     validar_dados_consumo,
 )
+from appweb.comparativos import (
+    calcular_comparativo_acao,
+)
 from appweb.equipamentos import (
     calcular_consumo_por_hora,
     carregar_dados_equipamentos,
@@ -388,6 +391,11 @@ class RecomendacoesApiTests(TestCase):
             self.assertNotIn('local', sugestao['evidencias'][0])
             self.assertNotIn('periodo_inicio', sugestao['evidencias'][0])
             self.assertNotIn('periodo_fim', sugestao['evidencias'][0])
+            self.assertIn('comparativo', sugestao)
+            self.assertEqual(
+                sugestao['comparativo']['natureza'],
+                'estimativa_demonstrativa',
+            )
 
         for item in recomendacoes:
             self.assertTrue(item['dados_simulados'])
@@ -505,6 +513,44 @@ class RecomendacoesApiTests(TestCase):
 class SugestoesOrientadasTests(TestCase):
     def _acoes(self):
         return gerar_recomendacoes(carregar_catalogo_acoes())
+
+    def test_f6_a05_compara_residuos_antes_e_depois_estimado(self):
+        comparativo = calcular_comparativo_acao(
+            {'id_acao': 'A05'},
+            _indicadores_sociais_teste(),
+            _indicadores_residuos_teste('12.50'),
+        )
+
+        self.assertEqual(comparativo['indicador'], 'residuos.total.nao_reciclado_kg')
+        self.assertEqual(comparativo['escopo'], 'agregado')
+        self.assertEqual(comparativo['unidade'], 'kg')
+        self.assertEqual(comparativo['antes'], '12.50')
+        self.assertEqual(comparativo['depois'], '0.00')
+        self.assertEqual(comparativo['natureza'], 'estimativa_demonstrativa')
+        self.assertIn('não uma medição pós-ação', comparativo['mensagem'])
+
+    def test_f6_a06_compara_alertas_antes_e_depois_estimado(self):
+        comparativo = calcular_comparativo_acao(
+            {'id_acao': 'A06'},
+            _indicadores_sociais_teste('vermelho', 4),
+            _indicadores_residuos_teste(),
+        )
+
+        self.assertEqual(comparativo['indicador'], 'social.total.alertas_seguranca')
+        self.assertEqual(comparativo['escopo'], 'agregado')
+        self.assertEqual(comparativo['unidade'], 'alertas')
+        self.assertEqual(comparativo['antes'], 4)
+        self.assertEqual(comparativo['depois'], 0)
+        self.assertEqual(comparativo['natureza'], 'estimativa_demonstrativa')
+
+    def test_f6_nao_cria_comparativo_para_a01_a04(self):
+        for id_acao in ('A01', 'A02', 'A03', 'A04'):
+            with self.subTest(id_acao=id_acao):
+                self.assertIsNone(calcular_comparativo_acao(
+                    {'id_acao': id_acao},
+                    _indicadores_sociais_teste('vermelho', 4),
+                    _indicadores_residuos_teste('12.50'),
+                ))
 
     def test_seleciona_a05_com_residuo_nao_reciclado_positivo(self):
         resultado = selecionar_sugestoes_orientadas(
@@ -814,6 +860,11 @@ class RecomendacoesPaginaTests(TestCase):
         self.assertContains(response, 'indicadores simulados disponíveis')
         self.assertContains(response, 'retorno financeiro')
         self.assertContains(response, 'estimado da ação')
+        self.assertContains(response, 'Comparação antes/depois')
+        self.assertContains(response, 'estimativa demonstrativa')
+        self.assertContains(response, 'Antes')
+        self.assertContains(response, 'Depois')
+        self.assertContains(response, 'comparativo')
         self.assertContains(
             response,
             'Sugestões orientadas pelos indicadores simulados',

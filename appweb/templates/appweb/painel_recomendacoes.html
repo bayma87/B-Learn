@@ -140,6 +140,25 @@
             color: rgba(243, 231, 239, 0.78);
         }
 
+        .comparativo-sugestao {
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.14);
+            overflow-wrap: anywhere;
+        }
+
+        .comparativo-sugestao h4 {
+            margin: 0 0 10px;
+        }
+
+        .comparativo-sugestao p {
+            line-height: 1.6;
+        }
+
+        .aviso-comparativo {
+            color: #ffcf9f;
+        }
+
         .recomendacao h3 {
             margin: 0 0 8px;
             font-size: 1.15rem;
@@ -235,7 +254,8 @@
             As sugestões orientadas usam regras demonstrativas sobre os
             indicadores simulados disponíveis. A prioridade considera somente
             o retorno financeiro estimado da ação e não representa uma
-            avaliação completa do impacto ESG.
+            avaliação completa do impacto ESG. Comparações antes/depois são
+            apresentadas somente como estimativa demonstrativa.
         </p>
 
         <p id="mensagem-dados" class="estado" role="status" aria-live="polite">
@@ -415,6 +435,59 @@
             }
         }
 
+        function criarComparativo(comparativo) {
+            if (
+                !comparativo || typeof comparativo !== 'object' ||
+                typeof comparativo.indicador !== 'string' ||
+                comparativo.escopo !== 'agregado' ||
+                typeof comparativo.unidade !== 'string' ||
+                (typeof comparativo.antes !== 'string' &&
+                    !Number.isInteger(comparativo.antes)) ||
+                (typeof comparativo.depois !== 'string' &&
+                    !Number.isInteger(comparativo.depois)) ||
+                comparativo.natureza !== 'estimativa_demonstrativa' ||
+                typeof comparativo.mensagem !== 'string' ||
+                Object.prototype.hasOwnProperty.call(comparativo, 'local') ||
+                Object.prototype.hasOwnProperty.call(comparativo, 'periodo_inicio') ||
+                Object.prototype.hasOwnProperty.call(comparativo, 'periodo_fim')
+            ) {
+                throw new Error('A API retornou um comparativo inválido.');
+            }
+
+            const bloco = document.createElement('div');
+            bloco.className = 'comparativo-sugestao';
+
+            const titulo = document.createElement('h4');
+            titulo.textContent = 'Comparação antes/depois';
+
+            const indicador = document.createElement('p');
+            indicador.textContent =
+                'Indicador: ' + comparativo.indicador +
+                ' (escopo agregado)';
+
+            const valores = document.createElement('dl');
+            valores.className = 'dados-recomendacao';
+            valores.append(
+                criarDado(
+                    'Antes',
+                    String(comparativo.antes).replace('.', ',') +
+                        ' ' + comparativo.unidade
+                ),
+                criarDado(
+                    'Depois',
+                    String(comparativo.depois).replace('.', ',') +
+                        ' ' + comparativo.unidade
+                )
+            );
+
+            const mensagem = document.createElement('p');
+            mensagem.className = 'aviso-comparativo';
+            mensagem.textContent = comparativo.mensagem;
+
+            bloco.append(titulo, indicador, valores, mensagem);
+            return bloco;
+        }
+
         function criarSugestao(item) {
             if (
                 !item || typeof item !== 'object' ||
@@ -472,6 +545,9 @@
             });
 
             artigo.append(titulo, pilar, justificativa, regra, evidencias);
+            if (item.comparativo !== undefined) {
+                artigo.appendChild(criarComparativo(item.comparativo));
+            }
             return artigo;
         }
 
