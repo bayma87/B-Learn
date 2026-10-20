@@ -1,0 +1,82 @@
+
+{% extends "appweb/home.html" %}
+{% block content %}
+<div style="max-width: 800px; margin: 30px auto; padding: 24px; font-family: Arial, sans-serif;">
+    <h1>Quiz Educativo ESG</h1>
+    <p>Teste seus conhecimentos sobre sustentabilidade nas empresas.</p>
+
+    <form id="quizForm">
+        <div style="margin-bottom: 24px;">
+            <h3>1. O que significa a sigla ESG?</h3>
+            <label><input type="radio" name="q1" value="a"> Economia, Sociedade e Gestão</label><br>
+            <label><input type="radio" name="q1" value="b"> Ambiental, Social e Governança</label><br>
+            <label><input type="radio" name="q1" value="c"> Energia, Sustentabilidade e Governo</label>
+        </div>
+
+        <div style="margin-bottom: 24px;">
+            <h3>2. Qual é um exemplo de prática ambiental?</h3>
+            <label><input type="radio" name="q2" value="a"> Reduzir o desperdício de água</label><br>
+            <label><input type="radio" name="q2" value="b"> Ignorar o descarte de resíduos</label><br>
+            <label><input type="radio" name="q2" value="c"> Aumentar o consumo de recursos sem controle</label>
+        </div>
+
+        <div style="margin-bottom: 24px;">
+            <h3>3. Qual é um exemplo de prática social?</h3>
+            <label><input type="radio" name="q3" value="a"> Descartar resíduos em rios</label><br>
+            <label><input type="radio" name="q3" value="b"> Ignorar a segurança dos funcionários</label><br>
+            <label><input type="radio" name="q3" value="c"> Promover condições de trabalho seguras</label>
+        </div>
+
+        <div style="margin-bottom: 24px;">
+            <h3>4. O que representa a governança?</h3>
+            <label><input type="radio" name="q4" value="a"> Transparência e ética na gestão</label><br>
+            <label><input type="radio" name="q4" value="b"> Apenas aumentar as vendas</label><br>
+            <label><input type="radio" name="q4" value="c"> Evitar prestar contas</label>
+        </div>
+
+        <div style="margin-bottom: 24px;">
+            <h3>5. Por que o ESG é importante para pequenas empresas?</h3>
+            <label><input type="radio" name="q5" value="a"> Porque elimina todos os custos</label><br>
+            <label><input type="radio" name="q5" value="b"> Porque ajuda a identificar riscos e melhorar práticas</label><br>
+            <label><input type="radio" name="q5" value="c"> Porque dispensa planejamento</label>
+        </div>
+
+        <button type="submit" style="padding: 12px 22px; background: #198754; color: white; border: none; border-radius: 6px; cursor: pointer;">
+            Ver resultado
+        </button>
+    </form>
+
+    <div id="resultado" style="margin-top: 24px; font-size: 18px; font-weight: bold;"></div>
+</div>
+
+<script>
+document.getElementById("quizForm").addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    const respostas = {
+        q1: "b",
+        q2: "a",
+        q3: "c",
+        q4: "a",
+        q5: "b"
+    };
+
+    let pontos = 0;
+
+    for (const pergunta in respostas) {
+        const marcada = document.querySelector('input[name="' + pergunta + '"]:checked');
+
+        if (marcada && marcada.value === respostas[pergunta]) {
+            pontos++;
+        }
+    }
+
+    document.getElementById("resultado").innerHTML =
+        "Você acertou " + pontos + " de 5 questões! " +
+        (pontos === 5 ? "Excelente! Você domina os conceitos básicos de ESG." :
+        pontos >= 3 ? "Bom trabalho! Continue aprendendo sobre ESG." :
+        "Continue estudando! Aprender sobre ESG é um passo importante para a sustentabilidade.");
+});
+</script>
+{% endblock %}
+ 
