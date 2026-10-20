@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel IoT - Pessoa A</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .card { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Painel de Operação, Equipamentos e Resultados</h1>
+
+    <div class="card" id="consumo-card">
+        <h2>F1: Consumo e Desperdício</h2>
+        <p>A carregar dados...</p>
+    </div>
+
+    <div class="card" id="equipamentos-card">
+        <h2>F2: Desempenho de Equipamentos</h2>
+        <p>A carregar dados...</p>
+    </div>
+
+    <div class="card" id="resultados-card">
+        <h2>F6: Resultados (Antes e Depois)</h2>
+        <p>A carregar dados...</p>
+    </div>
+
+    <script>
+        fetch('http://127.0.0.1:5000/consumo')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('consumo-card').innerHTML = `
+                    <h2>F1: Consumo e Desperdício</h2>
+                    <ul>
+                        <li>Recurso: ${data.recurso}</li>
+                        <li>Média Diária: ${data.media_diaria} ${data.unidade}</li>
+                        <li>Limite (+2 Desvios): ${data.limite_desperdicio} ${data.unidade}</li>
+                        <li><strong>Picos de Desperdício Detetados: ${data.alertas_desperdicio}</strong></li>
+                    </ul>`;
+            });
+
+        fetch('http://127.0.0.1:5000/equipamentos')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('equipamentos-card').innerHTML = `
+                    <h2>F2: Desempenho de Equipamentos</h2>
+                    <ul>
+                        <li>Equipamento: ${data.equipamento}</li>
+                        <li>Eficiência: <strong>${data.kwh_por_hora} kWh por hora</strong></li>
+                    </ul>`;
+            });
+
+        fetch('http://127.0.0.1:5000/resultados')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('resultados-card').innerHTML = `
+                    <h2>F6: Resultados (Antes e Depois)</h2>
+                    <ul>
+                        <li>Ação: ${data.acao}</li>
+                        <li>Redução: <strong>${data.variacao_percentual}%</strong></li>
+                        <li>Economia Gerada: <strong>R$ ${data.economia_reais}</strong></li>
+                    </ul>`;
+            });
+    </script>
+</body>
+</html>

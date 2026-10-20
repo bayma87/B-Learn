@@ -94,6 +94,9 @@ def get_recommendations(weakest_pillar):
 def home(request):
     return render(request, 'appweb/home.html')
 
+def quiz(request):
+    return render(request, 'appweb/quiz.html')
+
 
 def quem_somos(request):
     if request.method == 'POST':
