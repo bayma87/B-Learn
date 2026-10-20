@@ -17,7 +17,11 @@ from appweb.consumo import (
     validar_dados_consumo,
 )
 from appweb.comparativos import (
-    calcular_comparativo_acao,
+    anexar_ausencia_acompanhamento,
+    carregar_acompanhamentos,
+    calcular_acompanhamento,
+    montar_acompanhamento,
+    validar_acompanhamentos,
 )
 from appweb.equipamentos import (
     calcular_consumo_por_hora,
@@ -391,11 +395,41 @@ class RecomendacoesApiTests(TestCase):
             self.assertNotIn('local', sugestao['evidencias'][0])
             self.assertNotIn('periodo_inicio', sugestao['evidencias'][0])
             self.assertNotIn('periodo_fim', sugestao['evidencias'][0])
-            self.assertIn('comparativo', sugestao)
+            self.assertNotIn('comparativo', sugestao)
             self.assertEqual(
-                sugestao['comparativo']['natureza'],
-                'estimativa_demonstrativa',
+                sugestao['acompanhamento']['situacao'],
+                'sem_dados',
             )
+            self.assertIn(
+                'sem data de implantação registrada',
+                sugestao['acompanhamento']['motivo'],
+            )
+
+        self.assertEqual(
+            [item['id_acao'] for item in dados['acompanhamento']],
+            ['A01'],
+        )
+        acompanhamento = dados['acompanhamento'][0]
+        self.assertEqual(acompanhamento['situacao'], 'com_dados')
+        self.assertEqual(acompanhamento['local'], 'Fabrica')
+        self.assertEqual(acompanhamento['media_antes'], '93.80')
+        self.assertEqual(acompanhamento['media_depois'], '40.44')
+        self.assertEqual(acompanhamento['variacao_percentual'], '-56.88')
+        self.assertEqual(
+            acompanhamento['custo_diferenca']['premissa_tarifa'],
+            '0.85',
+        )
+        self.assertEqual(
+            acompanhamento['custo_diferenca']['natureza'],
+            'estimativa_demonstrativa',
+        )
+        self.assertIn(
+            'não comprova efeito causado',
+            acompanhamento['aviso_causal'],
+        )
+        self.assertNotIn('A01', [
+            item['id_acao'] for item in dados['sugestoes_orientadas']
+        ])
 
         for item in recomendacoes:
             self.assertTrue(item['dados_simulados'])
@@ -465,6 +499,42 @@ class RecomendacoesApiTests(TestCase):
             'avaliada',
         )
 
+    @patch('appweb.views.carregar_acompanhamentos')
+    def test_acompanhamento_com_dados_insuficientes_aparece_com_sem_dados(
+        self,
+        mock_carregar,
+    ):
+        mock_carregar.return_value = {
+            'versao': 1,
+            'origem': 'simulada',
+            'acompanhamentos': [
+                {
+                    'id_acompanhamento': 'AC-T1',
+                    'id_acao': 'A01',
+                    'recurso': 'energia',
+                    'unidade': 'kWh',
+                    'local': 'Fabrica',
+                    'data_implantacao': '2023-10-08',
+                    'janela_dias': 2,
+                    'tarifa': '0.85',
+                    'moeda': 'BRL',
+                    'projecao_dias': 30,
+                    'leituras': [
+                        {'data': '2023-10-06', 'valor': '50.00'},
+                    ],
+                },
+            ],
+        }
+
+        response = self.client.get(reverse('recomendacoes'), secure=True)
+
+        self.assertEqual(response.status_code, 200)
+        acompanhamento = response.json()['acompanhamento']
+        self.assertEqual(len(acompanhamento), 1)
+        self.assertEqual(acompanhamento[0]['situacao'], 'sem_dados')
+        self.assertIn('antes', acompanhamento[0]['motivo'])
+        self.assertNotIn('media_antes', acompanhamento[0])
+
     def test_recomendacoes_nao_aceita_metodo_post(self):
         response = self.client.post(
             reverse('recomendacoes'),
@@ -514,43 +584,51 @@ class SugestoesOrientadasTests(TestCase):
     def _acoes(self):
         return gerar_recomendacoes(carregar_catalogo_acoes())
 
-    def test_f6_a05_compara_residuos_antes_e_depois_estimado(self):
-        comparativo = calcular_comparativo_acao(
-            {'id_acao': 'A05'},
-            _indicadores_sociais_teste(),
-            _indicadores_residuos_teste('12.50'),
-        )
-
-        self.assertEqual(comparativo['indicador'], 'residuos.total.nao_reciclado_kg')
-        self.assertEqual(comparativo['escopo'], 'agregado')
-        self.assertEqual(comparativo['unidade'], 'kg')
-        self.assertEqual(comparativo['antes'], '12.50')
-        self.assertEqual(comparativo['depois'], '0.00')
-        self.assertEqual(comparativo['natureza'], 'estimativa_demonstrativa')
-        self.assertIn('não uma medição pós-ação', comparativo['mensagem'])
-
-    def test_f6_a06_compara_alertas_antes_e_depois_estimado(self):
-        comparativo = calcular_comparativo_acao(
-            {'id_acao': 'A06'},
-            _indicadores_sociais_teste('vermelho', 4),
-            _indicadores_residuos_teste(),
-        )
-
-        self.assertEqual(comparativo['indicador'], 'social.total.alertas_seguranca')
-        self.assertEqual(comparativo['escopo'], 'agregado')
-        self.assertEqual(comparativo['unidade'], 'alertas')
-        self.assertEqual(comparativo['antes'], 4)
-        self.assertEqual(comparativo['depois'], 0)
-        self.assertEqual(comparativo['natureza'], 'estimativa_demonstrativa')
-
-    def test_f6_nao_cria_comparativo_para_a01_a04(self):
-        for id_acao in ('A01', 'A02', 'A03', 'A04'):
+    def test_f6_sugestao_sem_configuracao_recebe_ausencia_com_motivo(self):
+        for id_acao in ('A05', 'A06'):
             with self.subTest(id_acao=id_acao):
-                self.assertIsNone(calcular_comparativo_acao(
-                    {'id_acao': id_acao},
-                    _indicadores_sociais_teste('vermelho', 4),
-                    _indicadores_residuos_teste('12.50'),
-                ))
+                resultado = anexar_ausencia_acompanhamento(
+                    {'id_acao': id_acao, 'acao': f'Ação {id_acao}'},
+                    set(),
+                )
+
+                self.assertEqual(
+                    resultado['acompanhamento']['situacao'],
+                    'sem_dados',
+                )
+                self.assertIn(
+                    'sem data de implantação registrada',
+                    resultado['acompanhamento']['motivo'],
+                )
+                self.assertNotIn('comparativo', resultado)
+                self.assertNotIn('depois', resultado)
+
+    def test_f6_sugestao_configurada_nao_recebe_bloco_de_ausencia(self):
+        resultado = anexar_ausencia_acompanhamento(
+            {'id_acao': 'A05'},
+            {'A05'},
+        )
+
+        self.assertNotIn('acompanhamento', resultado)
+
+    def test_f6_ausencia_preserva_campos_f5_e_entradas(self):
+        sugestao = {
+            'id_acao': 'A06',
+            'justificativa': 'Justificativa F5.',
+            'natureza_financeira': 'estimativa_do_catalogo',
+            'evidencias': [{'escopo': 'agregado'}],
+        }
+        copia = copy.deepcopy(sugestao)
+
+        resultado = anexar_ausencia_acompanhamento(sugestao, set())
+
+        self.assertEqual(sugestao, copia)
+        self.assertEqual(resultado['justificativa'], 'Justificativa F5.')
+        self.assertEqual(
+            resultado['natureza_financeira'],
+            'estimativa_do_catalogo',
+        )
+        self.assertEqual(resultado['evidencias'], [{'escopo': 'agregado'}])
 
     def test_seleciona_a05_com_residuo_nao_reciclado_positivo(self):
         resultado = selecionar_sugestoes_orientadas(
@@ -845,6 +923,305 @@ class SugestoesOrientadasTests(TestCase):
         self.assertEqual(entrada_invalida[0]['id_acao'], ' A05 ')
 
 
+def _leitura(data, valor):
+    return {'data': data, 'valor': valor}
+
+
+def _config_acompanhamento(**campos):
+    config = {
+        'id_acompanhamento': 'AC-T1',
+        'id_acao': 'A01',
+        'recurso': 'energia',
+        'unidade': 'kWh',
+        'local': 'Fabrica',
+        'data_implantacao': '2023-10-08',
+        'janela_dias': 2,
+        'tarifa': '0.85',
+        'moeda': 'BRL',
+        'projecao_dias': 30,
+        'leituras': [
+            _leitura('2023-10-06', '10.00'),
+            _leitura('2023-10-07', '10.00'),
+            _leitura('2023-10-09', '8.00'),
+            _leitura('2023-10-10', '8.00'),
+        ],
+    }
+    config.update(campos)
+    return config
+
+
+def _cenario_acompanhamento(*configs):
+    return {
+        'versao': 1,
+        'origem': 'simulada',
+        'acompanhamentos': list(configs),
+    }
+
+
+class AcompanhamentoF6Tests(TestCase):
+    def test_fixture_real_calcula_queda_com_janelas_de_7_dias(self):
+        configs = validar_acompanhamentos(carregar_acompanhamentos())
+
+        self.assertEqual(len(configs), 1)
+        resultado = calcular_acompanhamento(configs[0])
+
+        self.assertEqual(resultado['situacao'], 'com_dados')
+        self.assertEqual(resultado['local'], 'Fabrica')
+        self.assertEqual(resultado['unidade_medias'], 'kWh/dia')
+        self.assertEqual(
+            resultado['periodo_antes'],
+            {'inicio': '2023-10-01', 'fim': '2023-10-07', 'dias': 7},
+        )
+        self.assertEqual(
+            resultado['periodo_depois'],
+            {'inicio': '2023-10-09', 'fim': '2023-10-15', 'dias': 7},
+        )
+        self.assertEqual(resultado['media_antes'], '93.80')
+        self.assertEqual(resultado['media_depois'], '40.44')
+        self.assertEqual(resultado['diferenca_absoluta'], '-53.36')
+        self.assertEqual(resultado['variacao_percentual'], '-56.88')
+        self.assertEqual(resultado['tendencia'], 'queda')
+        custo = resultado['custo_diferenca']
+        self.assertEqual(custo['valor'], '-45.35')
+        self.assertEqual(custo['orientacao'], 'reducao_estimada')
+        self.assertEqual(custo['periodo'], 'por_dia')
+        self.assertEqual(custo['premissa_tarifa'], '0.85')
+        self.assertEqual(custo['moeda'], 'BRL')
+        self.assertEqual(custo['natureza'], 'estimativa_demonstrativa')
+        projecao = resultado['projecao_mensal']
+        self.assertEqual(projecao['dias'], 30)
+        self.assertEqual(projecao['valor'], '-1360.61')
+        self.assertIn('demonstrativa', projecao['premissa'])
+        self.assertIn(
+            'não comprova efeito causado',
+            resultado['aviso_causal'],
+        )
+        self.assertNotIn('motivo', resultado)
+
+    def test_dia_da_implantacao_e_excluido_de_ambas_as_janelas(self):
+        configs = validar_acompanhamentos(carregar_acompanhamentos())
+        config = configs[0]
+        config['leituras'].append(_leitura('2023-10-08', '999.99'))
+
+        resultado = calcular_acompanhamento(config)
+
+        self.assertEqual(resultado['situacao'], 'com_dados')
+        self.assertEqual(resultado['media_antes'], '93.80')
+        self.assertEqual(resultado['media_depois'], '40.44')
+
+    def test_leitura_fora_das_janelas_e_dado_invalido(self):
+        config = _config_acompanhamento(
+            leituras=[
+                _leitura('2023-10-06', '10.00'),
+                _leitura('2023-10-07', '10.00'),
+                _leitura('2023-10-09', '8.00'),
+                _leitura('2023-10-10', '8.00'),
+                _leitura('2023-10-20', '5.00'),
+            ],
+        )
+
+        with self.assertRaisesMessage(ValueError, 'fora das janelas'):
+            calcular_acompanhamento(config)
+
+    def test_data_duplicada_e_dado_invalido(self):
+        dados = _cenario_acompanhamento(
+            _config_acompanhamento(
+                leituras=[
+                    _leitura('2023-10-06', '10.00'),
+                    _leitura('2023-10-06', '12.00'),
+                ],
+            ),
+        )
+
+        with self.assertRaisesMessage(ValueError, 'duplicada'):
+            validar_acompanhamentos(dados)
+
+    def test_data_invalida_nao_e_confundida_com_ausencia(self):
+        dados = _cenario_acompanhamento(
+            _config_acompanhamento(
+                leituras=[_leitura('2023-02-30', '10.00')],
+            ),
+        )
+
+        with self.assertRaisesMessage(ValueError, 'inexistente'):
+            validar_acompanhamentos(dados)
+
+    def test_valor_nao_numerico_nao_e_confundido_com_ausencia(self):
+        dados = _cenario_acompanhamento(
+            _config_acompanhamento(
+                leituras=[_leitura('2023-10-06', 'muita')],
+            ),
+        )
+
+        with self.assertRaisesMessage(ValueError, 'decimal inválido'):
+            validar_acompanhamentos(dados)
+
+    def test_cobertura_incompleta_retorna_sem_dados_com_motivo(self):
+        config = _config_acompanhamento(
+            leituras=[
+                _leitura('2023-10-07', '10.00'),
+                _leitura('2023-10-09', '8.00'),
+                _leitura('2023-10-10', '8.00'),
+            ],
+        )
+
+        resultado = calcular_acompanhamento(config)
+
+        self.assertEqual(resultado['situacao'], 'sem_dados')
+        self.assertIn('incompleta', resultado['motivo'])
+        self.assertIn('antes', resultado['motivo'])
+        self.assertNotIn('media_antes', resultado)
+
+    def test_sem_leituras_retorna_sem_dados_com_motivo(self):
+        config = _config_acompanhamento(leituras=[])
+
+        resultado = calcular_acompanhamento(config)
+
+        self.assertEqual(resultado['situacao'], 'sem_dados')
+        self.assertIn('Sem leituras no período antes', resultado['motivo'])
+        self.assertIn('2023-10-06 a 2023-10-07', resultado['motivo'])
+
+    def test_sem_leituras_apos_implantacao_retorna_sem_dados(self):
+        config = _config_acompanhamento(
+            leituras=[
+                _leitura('2023-10-06', '10.00'),
+                _leitura('2023-10-07', '10.00'),
+            ],
+        )
+
+        resultado = calcular_acompanhamento(config)
+
+        self.assertEqual(resultado['situacao'], 'sem_dados')
+        self.assertIn(
+            'Sem leituras no período depois',
+            resultado['motivo'],
+        )
+        self.assertIn('2023-10-09 a 2023-10-10', resultado['motivo'])
+
+    def test_base_zero_mantem_comparacao_e_anula_percentual(self):
+        config = _config_acompanhamento(
+            janela_dias=1,
+            leituras=[
+                _leitura('2023-10-07', '0.00'),
+                _leitura('2023-10-09', '5.00'),
+            ],
+        )
+
+        resultado = calcular_acompanhamento(config)
+
+        self.assertEqual(resultado['situacao'], 'com_dados')
+        self.assertIsNone(resultado['variacao_percentual'])
+        self.assertIn('Base zero', resultado['motivo'])
+        self.assertEqual(resultado['diferenca_absoluta'], '5.00')
+        self.assertEqual(resultado['custo_diferenca']['valor'], '4.25')
+        self.assertEqual(
+            resultado['custo_diferenca']['orientacao'],
+            'aumento_estimado',
+        )
+
+    def test_aumento_e_apresentado_com_sinal_e_sem_esconder_resultado(self):
+        config = _config_acompanhamento(
+            janela_dias=1,
+            leituras=[
+                _leitura('2023-10-07', '10.00'),
+                _leitura('2023-10-09', '12.00'),
+            ],
+        )
+
+        resultado = calcular_acompanhamento(config)
+
+        self.assertEqual(resultado['diferenca_absoluta'], '2.00')
+        self.assertEqual(resultado['variacao_percentual'], '20.00')
+        self.assertEqual(resultado['tendencia'], 'aumento')
+        self.assertEqual(resultado['custo_diferenca']['valor'], '1.70')
+        self.assertEqual(
+            resultado['custo_diferenca']['orientacao'],
+            'aumento_estimado',
+        )
+
+    def test_estabilidade_nao_e_apresentada_como_reducao(self):
+        config = _config_acompanhamento(
+            janela_dias=1,
+            leituras=[
+                _leitura('2023-10-07', '7.00'),
+                _leitura('2023-10-09', '7.00'),
+            ],
+        )
+
+        resultado = calcular_acompanhamento(config)
+
+        self.assertEqual(resultado['diferenca_absoluta'], '0.00')
+        self.assertEqual(resultado['variacao_percentual'], '0.00')
+        self.assertEqual(resultado['tendencia'], 'estavel')
+        self.assertEqual(resultado['custo_diferenca']['valor'], '0.00')
+        self.assertEqual(
+            resultado['custo_diferenca']['orientacao'],
+            'estavel',
+        )
+
+    def test_arredondamento_ocorre_somente_na_serializacao(self):
+        config = _config_acompanhamento(
+            janela_dias=1,
+            tarifa='1.00',
+            leituras=[
+                _leitura('2023-10-07', '1.00'),
+                _leitura('2023-10-09', '1.015'),
+            ],
+        )
+
+        resultado = calcular_acompanhamento(config)
+
+        self.assertEqual(resultado['media_depois'], '1.02')
+        self.assertEqual(resultado['diferenca_absoluta'], '0.02')
+        self.assertEqual(resultado['variacao_percentual'], '1.50')
+        self.assertEqual(resultado['custo_diferenca']['valor'], '0.02')
+
+    def test_configuracao_invalida_e_rejeitada(self):
+        casos = (
+            (_config_acompanhamento(local=' '), 'local'),
+            (_config_acompanhamento(janela_dias=0), 'janela_dias'),
+            (_config_acompanhamento(tarifa='0.00'), 'tarifa'),
+            (
+                _config_acompanhamento(data_implantacao='2023-10-8'),
+                'data_implantacao',
+            ),
+        )
+        for config, campo in casos:
+            with self.subTest(campo=campo):
+                with self.assertRaises(ValueError):
+                    validar_acompanhamentos(
+                        _cenario_acompanhamento(config)
+                    )
+
+        with self.assertRaisesMessage(ValueError, 'origem simulada'):
+            validar_acompanhamentos({
+                'origem': 'real',
+                'acompanhamentos': [],
+            })
+
+    def test_preserva_objetos_de_entrada(self):
+        dados = _cenario_acompanhamento(_config_acompanhamento())
+        copia = copy.deepcopy(dados)
+
+        validar_acompanhamentos(dados)
+        calcular_acompanhamento(dados['acompanhamentos'][0])
+
+        self.assertEqual(dados, copia)
+
+    def test_montar_acompanhamento_junta_nome_da_acao(self):
+        configs = validar_acompanhamentos(carregar_acompanhamentos())
+
+        itens = montar_acompanhamento(
+            configs,
+            {'A01': {'id_acao': 'A01', 'acao': 'Ação A01'}},
+        )
+
+        self.assertEqual(itens[0]['acao'], 'Ação A01')
+
+        itens_sem_nome = montar_acompanhamento(configs, {})
+        self.assertIsNone(itens_sem_nome[0]['acao'])
+
+
 class RecomendacoesPaginaTests(TestCase):
     def test_pagina_de_recomendacoes_renderiza_com_menu_e_api(self):
         response = self.client.get(
@@ -860,11 +1237,6 @@ class RecomendacoesPaginaTests(TestCase):
         self.assertContains(response, 'indicadores simulados disponíveis')
         self.assertContains(response, 'retorno financeiro')
         self.assertContains(response, 'estimado da ação')
-        self.assertContains(response, 'Comparação antes/depois')
-        self.assertContains(response, 'estimativa demonstrativa')
-        self.assertContains(response, 'Antes')
-        self.assertContains(response, 'Depois')
-        self.assertContains(response, 'comparativo')
         self.assertContains(
             response,
             'Sugestões orientadas pelos indicadores simulados',
@@ -872,6 +1244,21 @@ class RecomendacoesPaginaTests(TestCase):
         self.assertContains(response, 'lista-sugestoes')
         self.assertContains(response, 'justificativa')
         self.assertContains(response, 'avaliacao_fontes')
+        self.assertContains(response, 'Acompanhamento de ações')
+        self.assertContains(response, 'aviso-acompanhamento')
+        self.assertContains(response, 'lista-acompanhamento')
+        self.assertContains(
+            response,
+            'Cenário simulado de demonstração.',
+        )
+        self.assertContains(
+            response,
+            'as leituras posteriores e a tarifa são premissas do exemplo.',
+        )
+        self.assertContains(
+            response,
+            'A comparação não comprova efeito causado pela ação.',
+        )
         self.assertContains(
             response,
             f'href="{reverse("painel_recomendacoes")}"',

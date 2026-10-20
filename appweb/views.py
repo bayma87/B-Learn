@@ -14,7 +14,12 @@ from .consumo import (
     carregar_dados_consumo,
     calcular_indicadores_consumo,
 )
-from .comparativos import adicionar_comparativo
+from .comparativos import (
+    anexar_ausencia_acompanhamento,
+    carregar_acompanhamentos,
+    montar_acompanhamento,
+    validar_acompanhamentos,
+)
 from .equipamentos import (
     carregar_dados_equipamentos,
     calcular_consumo_por_hora,
@@ -280,14 +285,20 @@ def recomendacoes_esg(request):
             indicadores_social,
             indicadores_residuos,
         )
+        acompanhamentos_config = validar_acompanhamentos(
+            carregar_acompanhamentos()
+        )
+        ids_configurados = {
+            config['id_acao'] for config in acompanhamentos_config
+        }
         sugestoes_orientadas = [
-            adicionar_comparativo(
-                sugestao,
-                indicadores_social,
-                indicadores_residuos,
-            )
+            anexar_ausencia_acompanhamento(sugestao, ids_configurados)
             for sugestao in sugestoes['sugestoes_orientadas']
         ]
+        acompanhamento = montar_acompanhamento(
+            acompanhamentos_config,
+            {item['id_acao']: item for item in recomendacoes},
+        )
     except (OSError, UnicodeError, ValueError):
         logger.exception('Erro ao processar o catálogo de recomendações.')
 
@@ -303,6 +314,7 @@ def recomendacoes_esg(request):
             'personalizada_por_indicadores': False,
             'recomendacoes': recomendacoes,
             'sugestoes_orientadas': sugestoes_orientadas,
+            'acompanhamento': acompanhamento,
             'avaliacao_fontes': sugestoes['avaliacao_fontes'],
         },
         json_dumps_params={'ensure_ascii': False},
