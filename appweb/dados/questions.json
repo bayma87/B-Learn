@@ -1,0 +1,69 @@
+{
+  "versao": 1,
+  "origem": "simulada",
+  "registros": [
+    {
+      "id": "e1",
+      "topic": "Básico",
+      "pillar": "Ambiental",
+      "weight": 1,
+      "question": "A empresa monitora mensamente o consumo de energia e água?"
+    },
+    {
+      "id": "e2",
+      "topic": "Básico",
+      "pillar": "Ambiental",
+      "weight": 1,
+      "question": "Há gestão de resíduos e percentual de reciclagem?"
+    },
+    {
+      "id": "e3",
+      "topic": "Básico",
+      "pillar": "Ambiental",
+      "weight": 1,
+      "question": "Existem políticas para reduzir emissões e desperdícios?"
+    },
+    {
+      "id": "s1",
+      "topic": "Básico",
+      "pillar": "Social",
+      "weight": 1,
+      "question": "A empresa possui políticas de diversidade, inclusão e bem-estar?"
+    },
+    {
+      "id": "s2",
+      "topic": "Básico",
+      "pillar": "Social",
+      "weight": 1,
+      "question": "Há treinamento e capacitação de colaboradores com frequência?"
+    },
+    {
+      "id": "s3",
+      "topic": "Básico",
+      "pillar": "Social",
+      "weight": 1,
+      "question": "A organização acompanha a segurança, saúde e engajamento da equipe?"
+    },
+    {
+      "id": "g1",
+      "topic": "Básico",
+      "pillar": "Governança",
+      "weight": 1,
+      "question": "Existe código de ética e canais de denúncia claros?"
+    },
+    {
+      "id": "g2",
+      "topic": "Básico",
+      "pillar": "Governança",
+      "weight": 1,
+      "question": "A empresa define metas de sustentabilidade e acompanhamento de risco?"
+    },
+    {
+      "id": "g3",
+      "topic": "Básico",
+      "pillar": "Governança",
+      "weight": 1,
+      "question": "Há transparência e prestação de contas para a liderança e stakeholders?"
+    }
+  ]
+}

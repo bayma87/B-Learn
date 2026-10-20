@@ -46,6 +46,8 @@ class ContactMessage(models.Model):
 class ESGPillar(models.Model):
     topic = models.CharField(max_length=120)
     question = models.CharField(max_length=500)
+    weight = models.IntegerField()
+    id = models.CharField(max_length=10)
     pillar = models.CharField(
         max_length= 15,
         choices= [

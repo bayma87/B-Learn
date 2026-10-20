@@ -11,23 +11,12 @@ from django.views.decorators.http import require_GET
 
 from .forms import ContactMessageForm
 from .models import RegistroResiduo
+from .models import ESGPillar
 from .residuos import calcular_resumo_residuos
 from .social import calcular_indicadores_sociais
 
 logger = logging.getLogger(__name__)
 
-
-QUESTIONS = [
-    {'id': 'e1', 'pillar': 'Ambiental', 'text': 'A empresa monitora mensamente o consumo de energia e água?', 'weight': 1},
-    {'id': 'e2', 'pillar': 'Ambiental', 'text': 'Há gestão de resíduos e percentual de reciclagem?', 'weight': 1},
-    {'id': 'e3', 'pillar': 'Ambiental', 'text': 'Existem políticas para reduzir emissões e desperdícios?', 'weight': 1},
-    {'id': 's1', 'pillar': 'Social', 'text': 'A empresa possui políticas de diversidade, inclusão e bem-estar?', 'weight': 1},
-    {'id': 's2', 'pillar': 'Social', 'text': 'Há treinamento e capacitação de colaboradores com frequência?', 'weight': 1},
-    {'id': 's3', 'pillar': 'Social', 'text': 'A organização acompanha a segurança, saúde e engajamento da equipe?', 'weight': 1},
-    {'id': 'g1', 'pillar': 'Governança', 'text': 'Existe código de ética e canais de denúncia claros?', 'weight': 1},
-    {'id': 'g2', 'pillar': 'Governança', 'text': 'A empresa define metas de sustentabilidade e acompanhamento de risco?', 'weight': 1},
-    {'id': 'g3', 'pillar': 'Governança', 'text': 'Há transparência e prestação de contas para a liderança e stakeholders?', 'weight': 1},
-]
 
 PILLAR_ORDER = ['Ambiental', 'Social', 'Governança']
 
@@ -35,11 +24,12 @@ PILLAR_ORDER = ['Ambiental', 'Social', 'Governança']
 def calculate_scores(answer_map):
     scores = {pillar: 0 for pillar in PILLAR_ORDER}
     totals = {pillar: 0 for pillar in PILLAR_ORDER}
+    QUESTIONS = ESGPillar.objects.all()
 
     for question in QUESTIONS:
-        response = int(answer_map.get(question['id'], 0))
-        scores[question['pillar']] += response
-        totals[question['pillar']] += 2
+        response = int(answer_map.get(question.id, 0))
+        scores[question.pillar] += response
+        totals[question.pillar] += 2
 
     pillar_scores = {}
     for pillar in PILLAR_ORDER:
