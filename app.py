@@ -28,9 +28,9 @@ def consumo():
     media = statistics.mean(leituras)
     desvio = statistics.stdev(leituras)
     limite = media + (2 * desvio)
-    
+
     desperdicios = [val for val in leituras if val > limite]
-    
+
     return jsonify({
         "recurso": "energia",
         "unidade": "kWh",
@@ -45,7 +45,7 @@ def equipamentos():
     horas_uso = 120
     consumo_total_kwh = 450
     kwh_por_hora = consumo_total_kwh / horas_uso
-    
+
     return jsonify({
         "equipamento": "Motor Industrial",
         "horas_uso": horas_uso,
@@ -60,7 +60,7 @@ def resultados():
     consumo_depois = 750 # kWh
     variacao_percentual = ((consumo_depois - consumo_antes) / consumo_antes) * 100
     economia_reais = (consumo_antes - consumo_depois) * 0.85 # Ex: R$ 0.85 por kWh
-    
+
     return jsonify({
         "acao": "Troca para LEDs",
         "consumo_antes_kwh": consumo_antes,

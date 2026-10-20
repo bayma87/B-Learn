@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recomendações ESG | ESG Impact</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #2b0d2f;
+            color: #f3e7ef;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        header {
+            padding: 20px 24px;
+            background: #07080c;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        a {
+            color: #f3e7ef;
+        }
+
+        a:focus-visible {
+            outline: 2px solid #f2d7af;
+            outline-offset: 4px;
+        }
+
+        .marca {
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-decoration: none;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 48px 24px;
+        }
+
+        h1 {
+            margin: 0 0 12px;
+            font-size: 2rem;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 1.25rem;
+        }
+
+        .introducao,
+        .aviso,
+        .estado {
+            line-height: 1.6;
+        }
+
+        .introducao {
+            margin: 0 0 12px;
+        }
+
+        .aviso {
+            margin: 0 0 32px;
+            padding: 16px 20px;
+            background: rgba(242, 215, 175, 0.08);
+            border-left: 3px solid #f2d7af;
+            border-radius: 8px;
+        }
+
+        .estado {
+            margin: 0 0 28px;
+        }
+
+        .lista-cabecalho {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .lista-recomendacoes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .recomendacao {
+            padding: 24px;
+            background: #1b081f;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 14px;
+        }
+
+        .lista-sugestoes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .sugestao-orientada {
+            padding: 24px;
+            background: #1b081f;
+            border: 1px solid rgba(196, 100, 204, 0.55);
+            border-radius: 14px;
+            overflow-wrap: anywhere;
+        }
+
+        .sugestao-orientada h3 {
+            margin: 0 0 8px;
+            font-size: 1.15rem;
+            line-height: 1.4;
+        }
+
+        .justificativa-sugestao,
+        .evidencia-sugestao,
+        .regra-sugestao {
+            line-height: 1.6;
+        }
+
+        .justificativa-sugestao {
+            margin: 0 0 16px;
+        }
+
+        .evidencia-sugestao,
+        .regra-sugestao {
+            margin: 0;
+            color: rgba(243, 231, 239, 0.78);
+        }
+
+        .acompanhamento-acao {
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.14);
+            overflow-wrap: anywhere;
+        }
+
+        .acompanhamento-acao h3 {
+            margin: 0 0 10px;
+            font-size: 1.05rem;
+        }
+
+        .acompanhamento-acao p {
+            line-height: 1.6;
+        }
+
+        .aviso-comparativo {
+            color: #ffcf9f;
+        }
+
+        .recomendacao h3 {
+            margin: 0 0 8px;
+            font-size: 1.15rem;
+            line-height: 1.4;
+        }
+
+        .pilar {
+            margin: 0 0 18px;
+            color: #f2d7af;
+        }
+
+        .prioridade {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 5px 10px;
+            border: 1px solid rgba(242, 215, 175, 0.45);
+            border-radius: 999px;
+            color: #f2d7af;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .dados-recomendacao {
+            display: grid;
+            gap: 14px;
+            margin: 0;
+        }
+
+        .dado {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .dado dt {
+            color: rgba(243, 231, 239, 0.78);
+        }
+
+        .dado dd {
+            margin: 0;
+            color: #f2d7af;
+            font-weight: 700;
+            text-align: right;
+        }
+
+        .valor-monetario {
+            white-space: nowrap;
+        }
+
+        .indisponivel {
+            color: #ffb2b2 !important;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        @media (max-width: 560px) {
+            .lista-cabecalho,
+            .dado {
+                display: block;
+            }
+
+            .lista-cabecalho h2 {
+                margin-bottom: 8px;
+            }
+
+            .dado dd {
+                margin-top: 4px;
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        {% include 'appweb/menu_lateral.html' with pagina_atual='recomendacoes' %}
+
+        <a class="marca" href="{% url 'home' %}">ESG IMPACT</a>
+    </header>
+
+    <main>
+        <h1>Recomendações ESG</h1>
+        <p class="introducao">
+            Ações demonstrativas para apoiar decisões de investimento ESG.
+        </p>
+
+        <p class="aviso">
+            Este é um catálogo demonstrativo com dados simulados.
+            As sugestões orientadas usam regras demonstrativas sobre os
+            indicadores simulados disponíveis. A prioridade considera somente
+            o retorno financeiro estimado da ação e não representa uma
+            avaliação completa do impacto ESG. Comparações antes/depois são
+            apresentadas somente como estimativa demonstrativa.
+        </p>
+
+        <p id="mensagem-dados" class="estado" role="status" aria-live="polite">
+            Carregando recomendações...
+        </p>
+
+        <section aria-labelledby="titulo-recomendacoes">
+            <div class="lista-cabecalho">
+                <h2 id="titulo-recomendacoes">Ações recomendadas</h2>
+                <span id="total-recomendacoes"></span>
+            </div>
+
+            <div
+                id="lista-recomendacoes"
+                class="lista-recomendacoes"
+            ></div>
+        </section>
+
+        <section aria-labelledby="titulo-sugestoes">
+            <div class="lista-cabecalho">
+                <h2 id="titulo-sugestoes">
+                    Sugestões orientadas pelos indicadores simulados
+                </h2>
+                <span id="total-sugestoes"></span>
+            </div>
+
+            <p id="mensagem-sugestoes" class="estado" role="status" aria-live="polite">
+                Avaliando indicadores simulados...
+            </p>
+            <div id="lista-sugestoes" class="lista-sugestoes"></div>
+        </section>
+
+        <section aria-labelledby="titulo-acompanhamento">
+            <div class="lista-cabecalho">
+                <h2 id="titulo-acompanhamento">Acompanhamento de ações</h2>
+                <span id="total-acompanhamento"></span>
+            </div>
+
+            <p class="aviso" id="aviso-acompanhamento">
+                Cenário simulado de demonstração. A data de implantação,
+                as leituras posteriores e a tarifa são premissas do exemplo.
+                A comparação não comprova efeito causado pela ação.
+            </p>
+
+            <p
+                id="mensagem-acompanhamento"
+                class="estado"
+                role="status"
+                aria-live="polite"
+            ></p>
+            <div id="lista-acompanhamento" class="lista-sugestoes"></div>
+        </section>
+    </main>
+
+    <script>
+        const mensagemDados = document.getElementById('mensagem-dados');
+        const totalRecomendacoes = document.getElementById(
+            'total-recomendacoes'
+        );
+        const listaRecomendacoes = document.getElementById(
+            'lista-recomendacoes'
+        );
+        const mensagemSugestoes = document.getElementById(
+            'mensagem-sugestoes'
+        );
+        const totalSugestoes = document.getElementById('total-sugestoes');
+        const listaSugestoes = document.getElementById('lista-sugestoes');
+        const mensagemAcompanhamento = document.getElementById(
+            'mensagem-acompanhamento'
+        );
+        const totalAcompanhamento = document.getElementById(
+            'total-acompanhamento'
+        );
+        const listaAcompanhamento = document.getElementById(
+            'lista-acompanhamento'
+        );
+
+        function formatarMoeda(valor) {
+            if (!/^\d+\.\d{2}$/.test(valor)) {
+                throw new Error('Valor financeiro inválido.');
+            }
+
+            const partes = valor.split('.');
+            const inteiro = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return 'R$ ' + inteiro + ',' + partes[1];
+        }
+
+        function formatarPayback(valor) {
+            if (!/^\d+(\.\d+)?$/.test(valor)) {
+                throw new Error('Payback inválido.');
+            }
+
+            return valor.replace('.', ',') + ' meses';
+        }
+
+        function criarDado(rotulo, valor, classe) {
+            const item = document.createElement('div');
+            item.className = 'dado';
+
+            const titulo = document.createElement('dt');
+            titulo.textContent = rotulo;
+
+            const conteudo = document.createElement('dd');
+            conteudo.textContent = valor;
+            if (classe) {
+                conteudo.className = classe;
+            }
+
+            item.append(titulo, conteudo);
+            return item;
+        }
+
+        function criarRecomendacao(item) {
+            if (
+                !item || typeof item !== 'object' ||
+                typeof item.acao !== 'string' ||
+                typeof item.pilar !== 'string' ||
+                typeof item.economia_estimada_mensal !== 'string' ||
+                !item.investimento_sugerido ||
+                typeof item.investimento_sugerido !== 'object' ||
+                typeof item.investimento_sugerido.minimo !== 'string' ||
+                typeof item.investimento_sugerido.recomendado !== 'string' ||
+                typeof item.investimento_sugerido.maximo !== 'string' ||
+                (item.payback_meses !== null &&
+                    typeof item.payback_meses !== 'string') ||
+                (item.prioridade !== null &&
+                    typeof item.prioridade !== 'string')
+            ) {
+                throw new Error('A API retornou uma recomendação inválida.');
+            }
+
+            const artigo = document.createElement('article');
+            artigo.className = 'recomendacao';
+
+            const titulo = document.createElement('h3');
+            titulo.textContent = item.acao;
+
+            const pilar = document.createElement('p');
+            pilar.className = 'pilar';
+            pilar.textContent = item.pilar;
+
+            const prioridade = document.createElement('span');
+            prioridade.className = 'prioridade';
+            prioridade.textContent = item.prioridade || 'Sem prioridade';
+
+            const dados = document.createElement('dl');
+            dados.className = 'dados-recomendacao';
+            dados.append(
+                criarDado(
+                    'Investimento mínimo',
+                    formatarMoeda(item.investimento_sugerido.minimo),
+                    'valor-monetario'
+                ),
+                criarDado(
+                    'Investimento recomendado',
+                    formatarMoeda(item.investimento_sugerido.recomendado),
+                    'valor-monetario'
+                ),
+                criarDado(
+                    'Investimento máximo',
+                    formatarMoeda(item.investimento_sugerido.maximo),
+                    'valor-monetario'
+                ),
+                criarDado(
+                    'Economia mensal estimada',
+                    formatarMoeda(item.economia_estimada_mensal),
+                    'valor-monetario'
+                )
+            );
+
+            if (item.payback_meses === null) {
+                dados.append(
+                    criarDado(
+                        'Payback',
+                        item.payback_indisponivel || 'Indisponível',
+                        'indisponivel'
+                    )
+                );
+            } else {
+                dados.append(
+                    criarDado(
+                        'Payback',
+                        formatarPayback(item.payback_meses)
+                    )
+                );
+            }
+
+            artigo.append(titulo, pilar, prioridade, dados);
+            return artigo;
+        }
+
+        function validarFonte(fonte) {
+            if (!fonte || typeof fonte !== 'object' ||
+                !['avaliada', 'sem_dados', 'indisponivel'].includes(
+                    fonte.situacao
+                )) {
+                throw new Error('A API retornou uma avaliação de fonte inválida.');
+            }
+
+            if (fonte.situacao === 'avaliada' && fonte.escopo !== 'agregado') {
+                throw new Error('A API retornou um escopo de fonte inválido.');
+            }
+
+            if (fonte.situacao === 'indisponivel' &&
+                (typeof fonte.motivo !== 'string' || !fonte.motivo.trim())) {
+                throw new Error('A API retornou um motivo de fonte inválido.');
+            }
+        }
+
+        function substituirPonto(valor) {
+            return valor.replace('.', ',');
+        }
+
+        function formatarCusto(valor) {
+            if (!/^-?\d+\.\d{2}$/.test(valor)) {
+                throw new Error('Valor de custo inválido.');
+            }
+
+            const sinal = valor.startsWith('-') ? '-' : '';
+            const partes = valor.replace('-', '').split('.');
+            const inteiro = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return sinal + 'R$ ' + inteiro + ',' + partes[1];
+        }
+
+        const ROTULOS_ORIENTACAO = {
+            'reducao_estimada': 'Redução estimada de custo',
+            'aumento_estimado': 'Aumento estimado de custo',
+            'estavel': 'Variação estimada de custo: nenhuma'
+        };
+
+        const ROTULOS_PROJECAO = {
+            'reducao_estimada': 'Projeção mensal de redução',
+            'aumento_estimado': 'Projeção mensal de aumento',
+            'estavel': 'Projeção mensal sem variação'
+        };
+
+        function criarAusenciaAcompanhamento(acompanhamento) {
+            if (
+                !acompanhamento || typeof acompanhamento !== 'object' ||
+                acompanhamento.situacao !== 'sem_dados' ||
+                typeof acompanhamento.motivo !== 'string' ||
+                !acompanhamento.motivo.trim()
+            ) {
+                throw new Error(
+                    'A API retornou uma ausência de acompanhamento inválida.'
+                );
+            }
+
+            const aviso = document.createElement('p');
+            aviso.className = 'indisponivel';
+            aviso.textContent =
+                'Sem acompanhamento: ' + acompanhamento.motivo;
+            return aviso;
+        }
+
+        function criarAcompanhamento(item) {
+            if (
+                !item || typeof item !== 'object' ||
+                typeof item.id_acao !== 'string' ||
+                item.origem !== 'simulada' ||
+                typeof item.local !== 'string' || !item.local.trim() ||
+                typeof item.recurso !== 'string' ||
+                typeof item.unidade !== 'string' ||
+                typeof item.data_implantacao !== 'string' ||
+                (item.situacao !== 'com_dados' &&
+                    item.situacao !== 'sem_dados')
+            ) {
+                throw new Error('A API retornou um acompanhamento inválido.');
+            }
+
+            const bloco = document.createElement('article');
+            bloco.className = 'acompanhamento-acao';
+
+            const titulo = document.createElement('h3');
+            titulo.textContent = item.acao || item.id_acao;
+
+            const contexto = document.createElement('p');
+            contexto.textContent =
+                'Ação ' + item.id_acao + ' · indicador ' + item.recurso +
+                ' (' + item.unidade + ') · local ' + item.local +
+                ' · implantação ' + item.data_implantacao;
+
+            bloco.append(titulo, contexto);
+
+            if (item.situacao === 'sem_dados') {
+                bloco.appendChild(criarAusenciaAcompanhamento(item));
+                return bloco;
+            }
+
+            if (
+                !item.periodo_antes || typeof item.periodo_antes !== 'object' ||
+                typeof item.periodo_antes.inicio !== 'string' ||
+                typeof item.periodo_antes.fim !== 'string' ||
+                !item.periodo_depois || typeof item.periodo_depois !== 'object' ||
+                typeof item.periodo_depois.inicio !== 'string' ||
+                typeof item.periodo_depois.fim !== 'string' ||
+                typeof item.media_antes !== 'string' ||
+                typeof item.media_depois !== 'string' ||
+                typeof item.diferenca_absoluta !== 'string' ||
+                (item.variacao_percentual !== null &&
+                    typeof item.variacao_percentual !== 'string') ||
+                typeof item.tendencia !== 'string' ||
+                !item.custo_diferenca || typeof item.custo_diferenca !== 'object' ||
+                typeof item.custo_diferenca.valor !== 'string' ||
+                typeof item.custo_diferenca.moeda !== 'string' ||
+                typeof item.custo_diferenca.premissa_tarifa !== 'string' ||
+                !ROTULOS_ORIENTACAO[item.custo_diferenca.orientacao] ||
+                item.custo_diferenca.natureza !== 'estimativa_demonstrativa' ||
+                !item.projecao_mensal || typeof item.projecao_mensal !== 'object' ||
+                typeof item.projecao_mensal.valor !== 'string' ||
+                typeof item.aviso_causal !== 'string' ||
+                (item.motivo !== undefined &&
+                    typeof item.motivo !== 'string')
+            ) {
+                throw new Error(
+                    'A API retornou um acompanhamento com dados inválido.'
+                );
+            }
+
+            const valores = document.createElement('dl');
+            valores.className = 'dados-recomendacao';
+            valores.append(
+                criarDado(
+                    'Média antes (' + item.periodo_antes.inicio + ' a ' +
+                        item.periodo_antes.fim + ')',
+                    substituirPonto(item.media_antes) + ' ' +
+                        item.unidade_medias
+                ),
+                criarDado(
+                    'Média depois (' + item.periodo_depois.inicio + ' a ' +
+                        item.periodo_depois.fim + ')',
+                    substituirPonto(item.media_depois) + ' ' +
+                        item.unidade_medias
+                ),
+                criarDado(
+                    'Diferença (depois - antes)',
+                    substituirPonto(item.diferenca_absoluta) + ' ' +
+                        item.unidade_medias,
+                    item.tendencia === 'queda' ? undefined : 'indisponivel'
+                )
+            );
+
+            if (item.variacao_percentual === null) {
+                valores.append(
+                    criarDado(
+                        'Variação percentual',
+                        item.motivo || 'Não calculável.',
+                        'indisponivel'
+                    )
+                );
+            } else {
+                valores.append(
+                    criarDado(
+                        'Variação percentual',
+                        substituirPonto(item.variacao_percentual) + ' %'
+                    )
+                );
+            }
+
+            valores.append(
+                criarDado(
+                    ROTULOS_ORIENTACAO[item.custo_diferenca.orientacao] +
+                        ' (por dia)',
+                    formatarCusto(item.custo_diferenca.valor) +
+                        ' · tarifa premissa R$ ' +
+                        substituirPonto(item.custo_diferenca.premissa_tarifa) +
+                        '/kWh',
+                    'valor-monetario'
+                ),
+                criarDado(
+                    ROTULOS_PROJECAO[item.custo_diferenca.orientacao] +
+                        ' demonstrativa (' +
+                        item.projecao_mensal.dias + ' dias)',
+                    formatarCusto(item.projecao_mensal.valor),
+                    'valor-monetario'
+                )
+            );
+
+            const aviso = document.createElement('p');
+            aviso.className = 'aviso-comparativo';
+            aviso.textContent = item.aviso_causal;
+
+            bloco.append(valores, aviso);
+            return bloco;
+        }
+
+        function criarSugestao(item) {
+            if (
+                !item || typeof item !== 'object' ||
+                typeof item.id_acao !== 'string' ||
+                typeof item.acao !== 'string' ||
+                typeof item.pilar !== 'string' ||
+                typeof item.justificativa !== 'string' ||
+                typeof item.regra_aplicada !== 'string' ||
+                item.natureza_financeira !== 'estimativa_do_catalogo' ||
+                !Array.isArray(item.evidencias) ||
+                item.evidencias.length === 0
+            ) {
+                throw new Error('A API retornou uma sugestão inválida.');
+            }
+
+            const artigo = document.createElement('article');
+            artigo.className = 'sugestao-orientada';
+
+            const titulo = document.createElement('h3');
+            titulo.textContent = item.id_acao + ' — ' + item.acao;
+
+            const pilar = document.createElement('p');
+            pilar.className = 'pilar';
+            pilar.textContent = item.pilar;
+
+            const justificativa = document.createElement('p');
+            justificativa.className = 'justificativa-sugestao';
+            justificativa.textContent = item.justificativa;
+
+            const regra = document.createElement('p');
+            regra.className = 'regra-sugestao';
+            regra.textContent = 'Regra aplicada: ' + item.regra_aplicada;
+
+            const evidencias = document.createElement('div');
+            evidencias.className = 'evidencia-sugestao';
+            item.evidencias.forEach(function (evidencia) {
+                if (
+                    !evidencia || typeof evidencia !== 'object' ||
+                    typeof evidencia.indicador !== 'string' ||
+                    evidencia.escopo !== 'agregado' ||
+                    !evidencia.valores_observados ||
+                    typeof evidencia.valores_observados !== 'object' ||
+                    Object.prototype.hasOwnProperty.call(evidencia, 'local') ||
+                    Object.prototype.hasOwnProperty.call(evidencia, 'periodo_inicio') ||
+                    Object.prototype.hasOwnProperty.call(evidencia, 'periodo_fim')
+                ) {
+                    throw new Error('A API retornou uma evidência inválida.');
+                }
+
+                const texto = document.createElement('p');
+                texto.textContent =
+                    'Indicador observado: ' + evidencia.indicador +
+                    ' (escopo agregado)';
+                evidencias.appendChild(texto);
+            });
+
+            artigo.append(titulo, pilar, justificativa, regra, evidencias);
+            if (item.acompanhamento !== undefined) {
+                artigo.appendChild(
+                    criarAusenciaAcompanhamento(item.acompanhamento)
+                );
+            }
+            return artigo;
+        }
+
+        function mostrarErro(mensagem) {
+            listaRecomendacoes.replaceChildren();
+            totalRecomendacoes.textContent = '';
+            listaSugestoes.replaceChildren();
+            totalSugestoes.textContent = '';
+            mensagemSugestoes.textContent = '';
+            listaAcompanhamento.replaceChildren();
+            totalAcompanhamento.textContent = '';
+            mensagemAcompanhamento.textContent = '';
+            mensagemDados.textContent = mensagem;
+        }
+
+        async function carregarRecomendacoes() {
+            try {
+                const resposta = await fetch(
+                    "{% url 'recomendacoes' %}",
+                    { cache: 'no-store' }
+                );
+
+                if (!resposta.ok) {
+                    throw new Error('Não foi possível consultar a API.');
+                }
+
+                const dados = await resposta.json();
+                if (
+                    !dados || typeof dados !== 'object' ||
+                    !Array.isArray(dados.recomendacoes) ||
+                    !Array.isArray(dados.sugestoes_orientadas) ||
+                    !Array.isArray(dados.acompanhamento) ||
+                    dados.origem !== 'simulada' ||
+                    dados.personalizada_por_indicadores !== false ||
+                    !dados.avaliacao_fontes ||
+                    typeof dados.avaliacao_fontes !== 'object'
+                ) {
+                    throw new Error('A API retornou uma estrutura inválida.');
+                }
+
+                validarFonte(dados.avaliacao_fontes.social);
+                validarFonte(dados.avaliacao_fontes.residuos);
+
+                listaRecomendacoes.replaceChildren();
+                dados.recomendacoes.forEach(function (item) {
+                    listaRecomendacoes.appendChild(criarRecomendacao(item));
+                });
+
+                listaSugestoes.replaceChildren();
+                dados.sugestoes_orientadas.forEach(function (item) {
+                    listaSugestoes.appendChild(criarSugestao(item));
+                });
+
+                listaAcompanhamento.replaceChildren();
+                dados.acompanhamento.forEach(function (item) {
+                    listaAcompanhamento.appendChild(criarAcompanhamento(item));
+                });
+
+                if (dados.acompanhamento.length === 0) {
+                    totalAcompanhamento.textContent = '';
+                    mensagemAcompanhamento.textContent =
+                        'Nenhuma ação configurada para acompanhamento.';
+                } else {
+                    totalAcompanhamento.textContent =
+                        dados.acompanhamento.length.toLocaleString('pt-BR') +
+                        (dados.acompanhamento.length === 1
+                            ? ' ação'
+                            : ' ações');
+                    mensagemAcompanhamento.textContent =
+                        'Comparação temporal simulada; sem prova causal.';
+                }
+
+                if (dados.sugestoes_orientadas.length === 0) {
+                    totalSugestoes.textContent = '';
+                    mensagemSugestoes.textContent =
+                        'Nenhuma sugestão orientada pelos indicadores simulados.';
+                } else {
+                    totalSugestoes.textContent =
+                        dados.sugestoes_orientadas.length.toLocaleString('pt-BR') +
+                        ' sugestões';
+                    mensagemSugestoes.textContent =
+                        'As sugestões são indicativas e baseadas em evidências agregadas.';
+                }
+
+                if (dados.recomendacoes.length === 0) {
+                    totalRecomendacoes.textContent = '';
+                    mensagemDados.textContent =
+                        'Nenhuma recomendação disponível no momento.';
+                    return;
+                }
+
+                totalRecomendacoes.textContent =
+                    dados.recomendacoes.length.toLocaleString('pt-BR') +
+                    ' recomendações';
+                mensagemDados.textContent =
+                    'Dados simulados carregados. A ordem segue o serviço de recomendações.';
+            } catch (erro) {
+                console.error(erro);
+                mostrarErro('Não foi possível carregar as recomendações.');
+            }
+        }
+
+        carregarRecomendacoes();
+    </script>
+</body>
+</html>

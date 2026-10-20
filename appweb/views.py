@@ -10,9 +10,25 @@ from django.shortcuts import render, redirect
 from django.views.decorators.http import require_GET
 
 from .forms import ContactMessageForm
+from .consumo import (
+    carregar_dados_consumo,
+    calcular_indicadores_consumo,
+)
+from .comparativos import (
+    anexar_ausencia_acompanhamento,
+    carregar_acompanhamentos,
+    montar_acompanhamento,
+    validar_acompanhamentos,
+)
+from .equipamentos import (
+    carregar_dados_equipamentos,
+    calcular_consumo_por_hora,
+)
 from .models import RegistroResiduo
+from .recomendacoes import gerar_recomendacoes
 from .residuos import calcular_resumo_residuos
 from .social import calcular_indicadores_sociais
+from .sugestoes import selecionar_sugestoes_orientadas
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +93,7 @@ def get_recommendations(weakest_pillar):
 
 def home(request):
     return render(request, 'appweb/home.html')
-    
+
 def quiz(request):
     return render(request, 'appweb/quiz.html')
 
@@ -162,6 +178,18 @@ def painel_social(request):
     return render(request, 'appweb/social.html')
 
 
+def painel_recomendacoes(request):
+    return render(request, 'appweb/painel_recomendacoes.html')
+
+
+def painel_consumo(request):
+    return render(request, 'appweb/painel_consumo.html')
+
+
+def painel_equipamentos(request):
+    return render(request, 'appweb/painel_equipamentos.html')
+
+
 @require_GET
 def indicadores_sociais(request):
     caminho = (
@@ -184,5 +212,113 @@ def indicadores_sociais(request):
 
     return JsonResponse(
         indicadores,
+        json_dumps_params={'ensure_ascii': False},
+    )
+
+
+@require_GET
+def indicadores_consumo(request):
+    try:
+        dados = carregar_dados_consumo()
+        indicadores = calcular_indicadores_consumo(dados)
+    except ValueError:
+        logger.exception('Erro ao processar os dados de consumo.')
+
+        return JsonResponse(
+            {'erro': 'Não foi possível carregar os indicadores de consumo.'},
+            status=500,
+        )
+
+    return JsonResponse(
+        indicadores,
+        json_dumps_params={'ensure_ascii': False},
+    )
+
+
+@require_GET
+def consumo_por_hora_equipamentos(request):
+    try:
+        dados = carregar_dados_equipamentos()
+        indicadores = calcular_consumo_por_hora(dados)
+    except ValueError:
+        logger.exception('Erro ao processar os dados de equipamentos.')
+
+        return JsonResponse(
+            {'erro': 'Não foi possível carregar os indicadores de equipamentos.'},
+            status=500,
+        )
+
+    return JsonResponse(
+        indicadores,
+        json_dumps_params={'ensure_ascii': False},
+    )
+
+
+def _carregar_indicadores_para_sugestoes():
+    caminho_social = (
+        Path(settings.BASE_DIR)
+        / 'appweb'
+        / 'dados'
+        / 'social.json'
+    )
+    caminho_residuos = (
+        Path(settings.BASE_DIR)
+        / 'appweb'
+        / 'dados'
+        / 'residuos.json'
+    )
+    indicadores_social = calcular_indicadores_sociais(
+        json.loads(caminho_social.read_text(encoding='utf-8'))
+    )
+    indicadores_residuos = calcular_resumo_residuos(
+        json.loads(caminho_residuos.read_text(encoding='utf-8'))
+    )
+    return indicadores_social, indicadores_residuos
+
+
+@require_GET
+def recomendacoes_esg(request):
+    try:
+        recomendacoes = gerar_recomendacoes()
+        indicadores_social, indicadores_residuos = (
+            _carregar_indicadores_para_sugestoes()
+        )
+        sugestoes = selecionar_sugestoes_orientadas(
+            recomendacoes,
+            indicadores_social,
+            indicadores_residuos,
+        )
+        acompanhamentos_config = validar_acompanhamentos(
+            carregar_acompanhamentos()
+        )
+        ids_configurados = {
+            config['id_acao'] for config in acompanhamentos_config
+        }
+        sugestoes_orientadas = [
+            anexar_ausencia_acompanhamento(sugestao, ids_configurados)
+            for sugestao in sugestoes['sugestoes_orientadas']
+        ]
+        acompanhamento = montar_acompanhamento(
+            acompanhamentos_config,
+            {item['id_acao']: item for item in recomendacoes},
+        )
+    except (OSError, UnicodeError, ValueError):
+        logger.exception('Erro ao processar o catálogo de recomendações.')
+
+        return JsonResponse(
+            {'erro': 'Não foi possível carregar as recomendações.'},
+            status=500,
+        )
+
+    return JsonResponse(
+        {
+            'origem': 'simulada',
+            'total': len(recomendacoes),
+            'personalizada_por_indicadores': False,
+            'recomendacoes': recomendacoes,
+            'sugestoes_orientadas': sugestoes_orientadas,
+            'acompanhamento': acompanhamento,
+            'avaliacao_fontes': sugestoes['avaliacao_fontes'],
+        },
         json_dumps_params={'ensure_ascii': False},
     )

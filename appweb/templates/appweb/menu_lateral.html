@@ -178,9 +178,24 @@
             Resíduos
         </a>
 
+        <a href="{% url 'painel_consumo' %}"
+           {% if pagina_atual == 'consumo' %}aria-current="page"{% endif %}>
+            Consumo
+        </a>
+
+        <a href="{% url 'painel_equipamentos' %}"
+           {% if pagina_atual == 'equipamentos' %}aria-current="page"{% endif %}>
+            Equipamentos
+        </a>
+
         <a href="{% url 'painel_social' %}"
            {% if pagina_atual == 'social' %}aria-current="page"{% endif %}>
             Social
+        </a>
+
+        <a href="{% url 'painel_recomendacoes' %}"
+           {% if pagina_atual == 'recomendacoes' %}aria-current="page"{% endif %}>
+            Recomendações
         </a>
 
         <a href="{% url 'quem_somos' %}"
