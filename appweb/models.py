@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MinValueValidator
 
 
 class AssessmentResult(models.Model):
@@ -19,6 +20,16 @@ class AssessmentResult(models.Model):
         self.weakest_pillar = min(scores, key=scores.get)
         return self
 
+    def add_points(self, pillar):
+        if (str(pillar).lower() == 'social'):
+            self.social_score += 1
+        elif (str(pillar).lower() == 'ambiental'):
+            self.environmental_score += 1
+        elif (str(pillar).lower() == 'governança'):
+            self.governance_score += 1
+        else:
+            print('Incorrect pillar!')
+
     def __str__(self):
         return f"Resultado ESG {self.overall_score}"
 
@@ -31,3 +42,49 @@ class ContactMessage(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.email}"
+
+class ESGPillar(models.Model):
+    topic = models.CharField(max_length=120)
+    question = models.CharField(max_length=500)
+    pillar = models.CharField(
+        max_length= 15,
+        choices= [
+            ('Ambiental', 'ambiental'),
+            ('Social', 'social'),
+            ('Governança', 'governança')
+        ]
+    )
+
+    def __str__(self):
+        return f"[{self.topic} - {self.pillar}]:   {self.question}"
+
+class RegistroResiduo(models.Model):
+    DESTINOS = [
+        ('reciclado', 'Reciclado'),
+        ('nao_reciclado', 'Não reciclado'),
+    ]
+
+    data = models.DateField()
+    local = models.CharField(max_length=100)
+
+    quantidade_kg = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(0)],
+    )
+
+    destino = models.CharField(
+        max_length=20,
+        choices=DESTINOS,  
+    )
+
+    class Meta:
+        ordering = ['-data', '-id']
+        verbose_name = 'Registro de resíduo'
+        verbose_name_plural = 'Registros de resíduos'
+
+    def __str__(self):
+        return (
+            f"{self.local} - {self.quantidade_kg} kg "
+            f"- {self.get_destino_display()}"
+        )

@@ -269,6 +269,14 @@ A análise comparativa demonstra que as plataformas pesquisadas oferecem recurso
 - [Sedex — Platform](https://www.sedex.com/solutions/sedex-platform/)
 - [Sphera — Sustainability management and reporting](https://sphera.com/solutions/environment-health-safety-sustainability/corporate-sustainability-software/management-and-reporting-software/)
 
+## Execucao e entrega - Historia 1
 
+1. Instalacao e execucao: Python 3.12.10 validado neste notebook; Django 6.1.1; Flask 3.1.3. PowerShell/Git Bash: python -m venv venv; .\venv\Scripts\Activate.ps1 ou source venv/Scripts/activate; python -m pip install -r requirements.txt; python manage.py migrate; python manage.py check; python manage.py test. DEBUG=True apenas local; servidor em http://127.0.0.1:8001 (HTTP, nao HTTPS).
 
+2. Rotas (appweb/urls.py, localhost:8001): /, /quiz/, /quem-somos/, /residuos/, /residuos/resumo, /social/, /social/indicadores, /recomendacoes, /painel-recomendacoes/, /consumo/indicadores, /equipamentos/consumo-por-hora, /painel-equipamentos/, /painel-consumo/. Acompanhamento F6 em /recomendacoes (campo acompanhamento) e /painel-recomendacoes/ (sem rota Django /resultados).
 
+3. Premissas e limitacoes: dados simulados; valores financeiros estimados; F6 exclusivo A01 (fixture appweb/dados/acompanhamento_f6.json); janelas 7 dias com dia de implantacao excluido; tarifa demonstrativa 0.85 e projecao 30 dias; comparacao temporal sem prova causal; A05/A06 com sugestoes mas sem acompanhamento configurado.
+
+4. Contribuicoes: Arthur - PR15 parcial (consumo.py F1, comparativos.py formulas F6). Pedro - conteudo do gerador PR16 adaptado para catalogo, calculo financeiro e painel de recomendacoes. Integracao - sugestoes.py e complemento novo (nao atribuido ao PR16), demais complementos de conexao/API/painel/validacao/escenario F6/testes/resolucao conflitos. Preservados quiz e ESGPillar (migracao 0003). Lista original de autores preservada; sem emails/coautoria inventados.
+
+5. Demonstracao: consumo -> equipamentos -> Social -> Residuos -> catalogo/recomendacoes -> acompanhamento. Resultado da ultima validacao: 120 testes aprovados (117 Django + 3 Flask), branch integracao/entrega-h1, commit 5f6393c.

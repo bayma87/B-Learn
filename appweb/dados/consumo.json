@@ -1,0 +1,78 @@
+{
+  "versao": 1,
+  "origem": "simulada",
+  "registros": [
+    {
+      "id_leitura": "F1-E-001",
+      "recurso": "energia",
+      "valor": "50.50",
+      "unidade": "kWh",
+      "data": "2023-10-01",
+      "local": "Fabrica"
+    },
+    {
+      "id_leitura": "F1-E-002",
+      "recurso": "energia",
+      "valor": "55.20",
+      "unidade": "kWh",
+      "data": "2023-10-02",
+      "local": "Fabrica"
+    },
+    {
+      "id_leitura": "F1-E-003",
+      "recurso": "energia",
+      "valor": "60.10",
+      "unidade": "kWh",
+      "data": "2023-10-03",
+      "local": "Fabrica"
+    },
+    {
+      "id_leitura": "F1-E-004",
+      "recurso": "energia",
+      "valor": "185.00",
+      "unidade": "kWh",
+      "data": "2023-10-04",
+      "local": "Fabrica"
+    },
+    {
+      "id_leitura": "F1-E-005",
+      "recurso": "energia",
+      "valor": "52.30",
+      "unidade": "kWh",
+      "data": "2023-10-05",
+      "local": "Fabrica"
+    },
+    {
+      "id_leitura": "F1-E-006",
+      "recurso": "energia",
+      "valor": "195.50",
+      "unidade": "kWh",
+      "data": "2023-10-06",
+      "local": "Fabrica"
+    },
+    {
+      "id_leitura": "F1-E-007",
+      "recurso": "energia",
+      "valor": "58.00",
+      "unidade": "kWh",
+      "data": "2023-10-07",
+      "local": "Fabrica"
+    },
+    {
+      "id_leitura": "F1-A-001",
+      "recurso": "agua",
+      "valor": "12.40",
+      "unidade": "m3",
+      "data": "2026-10-01",
+      "local": "Fabrica"
+    },
+    {
+      "id_leitura": "F1-A-002",
+      "recurso": "agua",
+      "valor": "12.80",
+      "unidade": "m3",
+      "data": "2026-10-02",
+      "local": "Fabrica"
+    }
+  ]
+}

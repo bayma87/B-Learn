@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BLearn</title>
+
     <style>
         :root {
             --bg: #0a0c10;
@@ -25,7 +26,9 @@
             --leaf-deep: #5d8f5d;
         }
 
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+        }
 
         html, body {
             margin: 0;
@@ -316,9 +319,23 @@
             box-shadow: inset -8px -8px 12px rgba(38,70,44,0.12);
         }
 
-        .leaf.left { left: 171px; top: 82px; transform: rotate(-30deg); }
-        .leaf.middle { left: 196px; top: 70px; transform: rotate(30deg); }
-        .leaf.right { left: 180px; top: 44px; transform: rotate(72deg); }
+        .leaf.left {
+            left: 171px;
+            top: 82px;
+            transform: rotate(-30deg);
+        }
+
+        .leaf.middle {
+            left: 196px;
+            top: 70px;
+            transform: rotate(30deg);
+        }
+
+        .leaf.right {
+            left: 180px;
+            top: 44px;
+            transform: rotate(72deg);
+        }
 
         .leaf::after {
             content: "";
@@ -343,8 +360,13 @@
             height: 120px;
         }
 
-        .person.left { left: 0; }
-        .person.right { left: 110px; }
+        .person.left {
+            left: 0;
+        }
+
+        .person.right {
+            left: 110px;
+        }
 
         .person .head {
             position: absolute;
@@ -366,8 +388,13 @@
             background: rgba(93, 142, 172, 0.96);
         }
 
-        .person.right .head { background: rgba(224, 184, 103, 0.97); }
-        .person.right .body { background: rgba(201, 166, 84, 0.95); }
+        .person.right .head {
+            background: rgba(224, 184, 103, 0.97);
+        }
+
+        .person.right .body {
+            background: rgba(201, 166, 84, 0.95);
+        }
 
         .person .torso {
             position: absolute;
@@ -387,7 +414,7 @@
             height: 180px;
         }
 
-        .shield { 
+        .shield {
             position: absolute;
             left: 14px;
             top: 0;
@@ -522,12 +549,15 @@
         }
     </style>
 </head>
+
 <body>
     <header class="topbar">
         <div class="topbar-left">
             {% include 'appweb/menu_lateral.html' with pagina_atual='inicio' %}
+
             <div class="search-icon" aria-label="pesquisa"></div>
         </div>
+
         <div class="brand">
             <span class="big">ESG</span>
             <span class="small">IMPACT</span>
@@ -545,7 +575,9 @@
                 </p>
 
                 <div class="cta-row">
-                    <a class="btn btn-primary" href="/quem-somos/">Comece aqui</a>
+                    <a class="btn btn-primary" href="/quem-somos/">
+                        Comece aqui
+                    </a>
                 </div>
             </section>
 
@@ -566,6 +598,7 @@
                         <div class="body"></div>
                         <div class="torso"></div>
                     </div>
+
                     <div class="person right">
                         <div class="head"></div>
                         <div class="body"></div>
@@ -575,9 +608,11 @@
 
                 <div class="shield-panel">
                     <div class="orbit-small"></div>
+
                     <div class="shield">
                         <div class="check"></div>
                     </div>
+
                     <div class="bars">
                         <span class="bar"></span>
                         <span class="bar"></span>

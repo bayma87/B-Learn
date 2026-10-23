@@ -1,0 +1,51 @@
+{
+  "versao": 1,
+  "origem": "simulada",
+  "observacao": "Fixtures novas do projeto; não são dados do Social ou do F1.",
+  "registros": [
+    {
+      "id_registro": "F2-SIM-001",
+      "equipamento_id": "EQ-F2-001",
+      "equipamento": "Motor Industrial",
+      "local": "Fabrica F2",
+      "recurso": "energia",
+      "consumo_kwh": "450.00",
+      "horas_uso": "120.00",
+      "periodo_inicio": "2026-10-01",
+      "periodo_fim": "2026-10-31"
+    },
+    {
+      "id_registro": "F2-SIM-002",
+      "equipamento_id": "EQ-F2-002",
+      "equipamento": "Linha de montagem demonstrativa",
+      "local": "Fabrica F2",
+      "recurso": "energia",
+      "consumo_kwh": "0.00",
+      "horas_uso": "80.00",
+      "periodo_inicio": "2026-10-01",
+      "periodo_fim": "2026-10-31"
+    },
+    {
+      "id_registro": "F2-SIM-003",
+      "equipamento_id": "EQ-F2-003",
+      "equipamento": "Bomba demonstrativa",
+      "local": "Fabrica F2",
+      "recurso": "energia",
+      "consumo_kwh": "0.00",
+      "horas_uso": "0.00",
+      "periodo_inicio": "2026-11-01",
+      "periodo_fim": "2026-11-30"
+    },
+    {
+      "id_registro": "F2-SIM-004",
+      "equipamento_id": "EQ-F2-004",
+      "equipamento": "Compressor demonstrativo",
+      "local": "Fabrica F2",
+      "recurso": "energia",
+      "consumo_kwh": "25.00",
+      "horas_uso": "0.00",
+      "periodo_inicio": "2026-12-01",
+      "periodo_fim": "2026-12-31"
+    }
+  ]
+}

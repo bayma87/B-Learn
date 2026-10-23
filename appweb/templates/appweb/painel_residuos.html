@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de resíduos | ESG Impact</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #2b0d2f;
+            color: #f3e7ef;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        header {
+            padding: 20px 24px;
+            background: #07080c;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        a {
+            color: #f3e7ef;
+        }
+
+        a:focus-visible {
+            outline: 2px solid #f2d7af;
+            outline-offset: 4px;
+        }
+
+        .marca {
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-decoration: none;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 48px 24px;
+        }
+
+        h1 {
+            margin: 0 0 12px;
+            font-size: 2rem;
+        }
+
+        main > p {
+            margin: 0 0 32px;
+            line-height: 1.6;
+        }
+
+        section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        section h2 {
+            grid-column: 1 / -1;
+            margin: 0;
+            font-size: 1.25rem;
+        }
+
+        article {
+            padding: 24px;
+            background: #1b081f;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 14px;
+        }
+
+        article h3 {
+            margin: 0 0 16px;
+            font-size: 1rem;
+        }
+
+        article p {
+            margin: 0;
+            color: #f2d7af;
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1.4;
+            overflow-wrap: anywhere;
+        }
+
+        @media (max-width: 560px) {
+            section {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        {% include 'appweb/menu_lateral.html' with pagina_atual='residuos' %}
+
+        <a class="marca" href="{% url 'home' %}">ESG IMPACT</a>
+    </header>
+
+    <main>
+        <h1>Painel de resíduos</h1>
+        <p>Acompanhe as quantidades registradas e a taxa de reciclagem.</p>
+
+        <p id="mensagem-dados" role="status" aria-live="polite">
+            Carregando dados simulados...
+        </p>
+
+        <section aria-labelledby="titulo-indicadores">
+            <h2 id="titulo-indicadores">Resumo dos resíduos</h2>
+
+            <article>
+                <h3>Total registrado</h3>
+                <p id="total-kg">Carregando...</p>
+            </article>
+
+            <article>
+                <h3>Reciclados</h3>
+                <p id="reciclado-kg">Carregando...</p>
+            </article>
+
+            <article>
+                <h3>Não reciclados</h3>
+                <p id="nao-reciclado-kg">Carregando...</p>
+            </article>
+
+            <article>
+                <h3>Taxa de reciclagem</h3>
+                <p id="taxa-reciclagem">Carregando...</p>
+            </article>
+        </section>
+    </main>
+
+    <script>
+        function formatarNumero(valor, casas) {
+            const numero = Number(valor);
+
+            if (!Number.isFinite(numero)) {
+                throw new Error('A API retornou um número inválido.');
+            }
+
+            return numero.toLocaleString('pt-BR', {
+                minimumFractionDigits: casas,
+                maximumFractionDigits: casas
+            });
+        }
+
+        async function carregarResiduos() {
+            const mensagem = document.getElementById('mensagem-dados');
+
+            try {
+                const resposta = await fetch(
+                    "{% url 'resumo_residuos' %}",
+                    { cache: 'no-store' }
+                );
+
+                if (!resposta.ok) {
+                    throw new Error('Não foi possível consultar a API.');
+                }
+
+                const dados = await resposta.json();
+                const resumo = dados.total;
+
+                document.getElementById('total-kg').textContent =
+                    formatarNumero(resumo.total_kg, 2) + ' kg';
+
+                document.getElementById('reciclado-kg').textContent =
+                    formatarNumero(resumo.reciclado_kg, 2) + ' kg';
+
+                document.getElementById('nao-reciclado-kg').textContent =
+                    formatarNumero(resumo.nao_reciclado_kg, 2) + ' kg';
+
+                document.getElementById('taxa-reciclagem').textContent =
+                    resumo.tem_quantidade
+                        ? formatarNumero(resumo.taxa_reciclagem, 1) + '%'
+                        : 'Sem quantidade para calcular a taxa.';
+
+                mensagem.textContent = 'Dados simulados carregados.';
+            } catch (erro) {
+                console.error(erro);
+
+                mensagem.textContent =
+                    'Não foi possível carregar os indicadores.';
+
+                const campos = [
+                    'total-kg',
+                    'reciclado-kg',
+                    'nao-reciclado-kg',
+                    'taxa-reciclagem'
+                ];
+
+                campos.forEach(function (id) {
+                    document.getElementById(id).textContent =
+                        'Indisponível';
+                });
+            }
+        }
+
+        carregarResiduos();
+    </script>
+</body>
+</html>
