@@ -525,11 +525,7 @@
 <body>
     <header class="topbar">
         <div class="topbar-left">
-            <div class="menu-button" aria-label="menu">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
+            {% include 'appweb/menu_lateral.html' with pagina_atual='inicio' %}
             <div class="search-icon" aria-label="pesquisa"></div>
         </div>
         <div class="brand">

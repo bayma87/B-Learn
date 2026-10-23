@@ -49,15 +49,6 @@
             text-transform: uppercase;
         }
 
-        .nav-link {
-            color: var(--muted);
-            text-decoration: none;
-            border: 1px solid var(--border);
-            padding: 10px 18px;
-            border-radius: 10px;
-            background: rgba(255,255,255,0.02);
-        }
-
         .page {
             display: grid;
             grid-template-columns: 1.1fr 0.9fr;
@@ -192,8 +183,9 @@
 <body>
     <div class="container">
         <header class="topbar">
+            {% include 'appweb/menu_lateral.html' with pagina_atual='quem_somos' %}
+
             <div class="brand">bLEARN</div>
-            <a class="nav-link" href="/">Voltar para home</a>
         </header>
 
         <main class="page">

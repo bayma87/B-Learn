@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aprenda ESG | ESG Impact</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #2b0d2f;
+            color: #f3e7ef;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        header {
+            padding: 20px 24px;
+            background: #07080c;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        a {
+            color: #f3e7ef;
+            text-underline-offset: 4px;
+        }
+
+        .marca {
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-decoration: none;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 48px 24px;
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        section {
+            margin-bottom: 40px;
+        }
+
+        .intro {
+            line-height: 1.6;
+        }
+
+        .cartoes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        article {
+            padding: 24px;
+            background: #1b081f;
+            border: 2px solid rgba(255, 255, 255, 0.14);
+            border-radius: 14px;
+        }
+
+        article h3 {
+            margin: 0 0 12px;
+            font-size: 1rem;
+        }
+
+        article p {
+            line-height: 1.5;
+            margin: 0 0 12px;
+        }
+
+        .valor {
+            color: #f2d7af;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .detalhe {
+            color: #cdb7c6;
+            font-size: 0.9rem;
+        }
+
+        .ativo {
+            border-color: #f5d76e;
+        }
+
+        .concluido {
+            border-color: #81d6a4;
+        }
+
+        .selo {
+            display: inline-block;
+            margin-bottom: 12px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.1);
+            font-size: 0.8rem;
+        }
+
+        .selo.alerta {
+            background: #f5d76e;
+            color: #2b0d2f;
+        }
+
+        .barra {
+            height: 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.14);
+            overflow: hidden;
+        }
+
+        .barra > span {
+            display: block;
+            height: 100%;
+            background: #81d6a4;
+            transition: width 0.3s ease;
+        }
+
+        fieldset {
+            margin: 0 0 16px;
+            padding: 0;
+            border: 0;
+        }
+
+        legend {
+            padding: 0;
+            margin-bottom: 12px;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+
+        button.acao {
+            padding: 10px 18px;
+            border: 0;
+            border-radius: 8px;
+            background: #f2d7af;
+            color: #2b0d2f;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        button.acao:disabled {
+            background: #81d6a4;
+            cursor: default;
+        }
+
+        button.acao:focus-visible,
+        input:focus-visible {
+            outline: 2px solid #f2d7af;
+            outline-offset: 3px;
+        }
+
+        .feedback {
+            margin: 12px 0 0;
+            font-weight: 700;
+        }
+
+        .feedback.certo {
+            color: #81d6a4;
+        }
+
+        .feedback.errado {
+            color: #ff9b9b;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        {% include 'appweb/menu_lateral.html' with pagina_atual='microlearning' %}
+
+        <a class="marca" href="{% url 'home' %}">ESG IMPACT</a>
+    </header>
+
+    <main>
+        <h1>Aprenda ESG no dia a dia</h1>
+        <p class="intro">
+            Microaprendizado rápido: responda quizzes, cumpra desafios de poucos
+            minutos e veja o efeito das suas atitudes. Alguns desafios são
+            sugeridos por sensores espalhados pela empresa.
+        </p>
+
+        <p id="mensagem-dados" role="status" aria-live="polite">
+            Carregando conteúdo...
+        </p>
+
+        <section aria-labelledby="titulo-progresso">
+            <h2 id="titulo-progresso">Seu progresso</h2>
+
+            <div class="cartoes">
+                <article>
+                    <h3>Pontos</h3>
+                    <p class="valor" id="pontos">-</p>
+                </article>
+
+                <article>
+                    <h3>Nível</h3>
+                    <p class="valor" id="nivel">-</p>
+                    <div class="barra" aria-hidden="true">
+                        <span id="barra-nivel" style="width: 0"></span>
+                    </div>
+                    <p class="detalhe" id="proximo-nivel"></p>
+                </article>
+            </div>
+        </section>
+
+        <section aria-labelledby="titulo-impacto">
+            <h2 id="titulo-impacto">O que as suas atitudes já geraram</h2>
+            <p class="detalhe">
+                Estimativas simples por desafio concluído, não medições reais.
+            </p>
+            <div class="cartoes" id="impacto"></div>
+        </section>
+
+        <section aria-labelledby="titulo-conceitos">
+            <h2 id="titulo-conceitos">ESG sem complicação</h2>
+            <div class="cartoes" id="conceitos"></div>
+        </section>
+
+        <section aria-labelledby="titulo-gatilhos">
+            <h2 id="titulo-gatilhos">Alertas dos sensores</h2>
+            <p class="detalhe">
+                Leituras simuladas. Quando um sensor passa do limite, sugerimos
+                um desafio rápido.
+            </p>
+            <div class="cartoes" id="gatilhos"></div>
+        </section>
+
+        <section aria-labelledby="titulo-quizzes">
+            <h2 id="titulo-quizzes">Quizzes</h2>
+            <div class="cartoes" id="quizzes"></div>
+        </section>
+
+        <section aria-labelledby="titulo-desafios">
+            <h2 id="titulo-desafios">Desafios rápidos</h2>
+            <div class="cartoes" id="desafios"></div>
+        </section>
+    </main>
+
+    <script>
+        const URL_DADOS = "{% url 'dados_microlearning' %}";
+        const URL_RESPONDER = "{% url 'responder_microlearning' %}";
+        const CSRF = "{{ csrf_token }}";
+        const mensagem = document.getElementById('mensagem-dados');
+
+        function el(tag, texto, classe) {
+            const no = document.createElement(tag);
+            if (texto !== undefined) no.textContent = texto;
+            if (classe) no.className = classe;
+            return no;
+        }
+
+        function preencher(id, cartoes) {
+            const alvo = document.getElementById(id);
+            alvo.replaceChildren(...cartoes);
+        }
+
+        async function enviar(id, resposta) {
+            const retorno = await fetch(URL_RESPONDER, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': CSRF
+                },
+                body: JSON.stringify({ id: id, resposta: resposta })
+            });
+            const corpo = await retorno.json();
+
+            if (!retorno.ok) {
+                throw new Error(corpo.erro || 'Falha ao enviar.');
+            }
+
+            return corpo;
+        }
+
+        function marcarConcluidos(progresso) {
+            document.querySelectorAll('[data-item]').forEach(function (cartao) {
+                const feito = progresso.concluidos.includes(cartao.dataset.item);
+                cartao.classList.toggle('concluido', feito);
+
+                const botao = cartao.querySelector('button.acao');
+                if (botao) {
+                    botao.disabled = feito;
+                    botao.textContent = feito ? 'Concluído ✓' : botao.dataset.rotulo;
+                }
+            });
+        }
+
+        function mostrarProgresso(progresso) {
+            document.getElementById('pontos').textContent = progresso.pontos;
+            document.getElementById('nivel').textContent = progresso.nivel;
+
+            const proximo = progresso.proximo_nivel;
+            const barra = document.getElementById('barra-nivel');
+
+            document.getElementById('proximo-nivel').textContent = proximo
+                ? 'Faltam ' + proximo.faltam + ' pontos para ' + proximo.nome + '.'
+                : 'Você chegou ao nível máximo!';
+            barra.style.width = proximo
+                ? Math.round(100 * progresso.pontos / (progresso.pontos + proximo.faltam)) + '%'
+                : '100%';
+
+            preencher('impacto', progresso.impacto.map(function (item) {
+                const cartao = el('article');
+                cartao.append(
+                    el('h3', item.rotulo),
+                    el('p', Number(item.valor).toLocaleString('pt-BR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    }), 'valor')
+                );
+                return cartao;
+            }));
+
+            marcarConcluidos(progresso);
+        }
+
+        async function concluirDesafio(id, feedback) {
+            try {
+                const corpo = await enviar(id);
+                mostrarProgresso(corpo.progresso);
+                feedback.textContent = corpo.resultado.pontos_ganhos
+                    ? '+' + corpo.resultado.pontos_ganhos + ' pontos!'
+                    : '';
+            } catch (erro) {
+                console.error(erro);
+                feedback.textContent = 'Não foi possível registrar. Tente de novo.';
+                feedback.className = 'feedback errado';
+            }
+        }
+
+        function cartaoQuiz(quiz) {
+            const cartao = el('article');
+            cartao.dataset.item = quiz.id;
+
+            const grupo = el('fieldset');
+            grupo.append(el('legend', quiz.pergunta));
+            quiz.opcoes.forEach(function (texto, indice) {
+                const rotulo = el('label');
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = 'quiz-' + quiz.id;
+                radio.value = indice;
+                rotulo.append(radio, ' ' + texto);
+                grupo.append(rotulo);
+            });
+
+            const feedback = el('p', '', 'feedback');
+            feedback.setAttribute('aria-live', 'polite');
+            const botao = el('button', 'Responder (+' + quiz.pontos + ' pts)', 'acao');
+            botao.type = 'button';
+            botao.dataset.rotulo = botao.textContent;
+            botao.addEventListener('click', async function () {
+                const marcada = grupo.querySelector('input:checked');
+                if (!marcada) {
+                    feedback.textContent = 'Escolha uma alternativa.';
+                    feedback.className = 'feedback errado';
+                    return;
+                }
+
+                try {
+                    const corpo = await enviar(quiz.id, Number(marcada.value));
+                    const certo = corpo.resultado.correta;
+                    feedback.className = 'feedback ' + (certo ? 'certo' : 'errado');
+                    feedback.textContent = (certo ? 'Correto! ' : 'Quase! Tente de novo. ')
+                        + (certo ? corpo.resultado.explicacao : '');
+                    mostrarProgresso(corpo.progresso);
+                } catch (erro) {
+                    console.error(erro);
+                    feedback.className = 'feedback errado';
+                    feedback.textContent = 'Não foi possível registrar. Tente de novo.';
+                }
+            });
+
+            cartao.append(el('span', quiz.pilar, 'selo'), grupo, botao, feedback);
+            return cartao;
+        }
+
+        function cartaoDesafio(desafio) {
+            const cartao = el('article');
+            cartao.dataset.item = desafio.id;
+            cartao.append(
+                el('span', desafio.pilar, 'selo'),
+                el('h3', desafio.titulo),
+                el('p', desafio.descricao)
+            );
+
+            if (desafio.impacto) {
+                cartao.append(el('p', 'Impacto estimado: ' + Number(desafio.impacto.valor)
+                    .toLocaleString('pt-BR') + ' ' + desafio.impacto.rotulo, 'detalhe'));
+            }
+
+            const feedback = el('p', '', 'feedback certo');
+            const botao = el('button', 'Fiz! (+' + desafio.pontos + ' pts)', 'acao');
+            botao.type = 'button';
+            botao.dataset.rotulo = botao.textContent;
+            botao.addEventListener('click', function () {
+                concluirDesafio(desafio.id, feedback);
+            });
+            cartao.append(botao, feedback);
+            return cartao;
+        }
+
+        function cartaoGatilho(gatilho, desafios) {
+            const cartao = el('article', undefined, gatilho.ativo ? 'ativo' : '');
+            const comparador = gatilho.condicao === 'acima' ? 'acima de' : 'abaixo de';
+
+            cartao.append(
+                el('span', gatilho.ativo ? 'Atenção' : 'Tudo certo',
+                    gatilho.ativo ? 'selo alerta' : 'selo'),
+                el('h3', gatilho.sensor + ' - ' + gatilho.local),
+                el('p', Number(gatilho.leitura).toLocaleString('pt-BR') + ' '
+                    + gatilho.unidade, 'valor'),
+                el('p', 'Alerta quando fica ' + comparador + ' '
+                    + Number(gatilho.limite).toLocaleString('pt-BR') + '.', 'detalhe')
+            );
+
+            if (gatilho.ativo) {
+                cartao.append(el('p', gatilho.mensagem));
+                cartao.append(el('p', 'Desafio sugerido: ' + gatilho.desafio_titulo, 'detalhe'));
+                const desafio = desafios.find(function (d) {
+                    return d.id === gatilho.desafio_id;
+                });
+                if (desafio) {
+                    const feedback = el('p', '', 'feedback certo');
+                    const botao = el('button', 'Fiz! (+' + desafio.pontos + ' pts)', 'acao');
+                    botao.type = 'button';
+                    botao.dataset.rotulo = botao.textContent;
+                    botao.addEventListener('click', function () {
+                        concluirDesafio(desafio.id, feedback);
+                    });
+                    cartao.append(botao, feedback);
+                    cartao.dataset.item = desafio.id;
+                }
+            }
+
+            return cartao;
+        }
+
+        async function carregar() {
+            try {
+                const resposta = await fetch(URL_DADOS, { cache: 'no-store' });
+
+                if (!resposta.ok) {
+                    throw new Error('Não foi possível consultar a API.');
+                }
+
+                const dados = await resposta.json();
+
+                preencher('conceitos', dados.conceitos.map(function (c) {
+                    const cartao = el('article');
+                    cartao.append(
+                        el('span', c.pilar, 'selo'),
+                        el('h3', c.titulo),
+                        el('p', c.texto),
+                        el('p', 'Exemplo: ' + c.exemplo, 'detalhe')
+                    );
+                    return cartao;
+                }));
+                preencher('gatilhos', dados.gatilhos.map(function (g) {
+                    return cartaoGatilho(g, dados.desafios);
+                }));
+                preencher('quizzes', dados.quizzes.map(cartaoQuiz));
+                preencher('desafios', dados.desafios.map(cartaoDesafio));
+                mostrarProgresso(dados.progresso);
+
+                mensagem.textContent = 'Conteúdo carregado. Dados dos sensores simulados.';
+            } catch (erro) {
+                console.error(erro);
+                mensagem.textContent = 'Não foi possível carregar o conteúdo.';
+            }
+        }
+
+        carregar();
+    </script>
+</body>
+</html>
