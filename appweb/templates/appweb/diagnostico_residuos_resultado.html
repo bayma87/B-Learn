@@ -1,0 +1,106 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise de Resíduos - Resultado</title>
+    <style>
+        body { font-family: Arial, sans-serif; background:#0a0c10; color:#f3e7ef; margin:0; padding:20px; }
+        .container { max-width: 900px; margin: 40px auto; background: rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:24px; }
+        .section { margin-bottom: 18px; padding: 14px; background: rgba(255,255,255,0.04); border-radius:6px; }
+        .note { background: rgba(255,255,255,0.05); padding:10px; border-radius:6px; }
+        .links a { color:#f2d7af; margin-right:12px; }
+        table { width:100%; border-collapse: collapse; }
+        td, th { padding:8px; border-bottom:1px solid rgba(255,255,255,0.1); text-align:left; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Análise de Resíduos - Resultado</h1>
+        <div class="note">
+            <strong>Entradas informadas pelo usuário:</strong> {{ origem_entradas }}.<br>
+            <strong>Resultados:</strong> {{ contexto_origem_residuos }} via <code>calcular_resumo_residuos</code>.<br>
+            <strong>Valores financeiros:</strong> {{ valores_financeiros_origem }} (do catálogo).<br>
+            <strong>Acompanhamento:</strong> {{ acompanhamento_f6 }} (não mede evolução desta análise).
+        </div>
+
+        <div class="section">
+            <h2>Entradas informadas</h2>
+            <table>
+                <tr><th>Local</th><td>{{ entradas.local }}</td></tr>
+                <tr><th>Data</th><td>{{ entradas.data }}</td></tr>
+                <tr><th>Quantidade (kg)</th><td>{{ entradas.quantidade_kg }}</td></tr>
+                <tr><th>Destino</th><td>{{ entradas.destino }}</td></tr>
+                <tr><th>Unidade</th><td>{{ entradas.unidade }}</td></tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>Resultados calculados (contrato do módulo)</h2>
+            <table>
+                <tr><th>Origem</th><td>{{ resumo.origem }}</td></tr>
+                <tr><th>Unidade</th><td>{{ resumo.unidade }}</td></tr>
+                <tr><th>Total kg</th><td>{{ resumo.total.total_kg }}</td></tr>
+                <tr><th>Reciclado kg</th><td>{{ resumo.total.reciclado_kg }}</td></tr>
+                <tr><th>Não reciclado kg</th><td>{{ resumo.total.nao_reciclado_kg }}</td></tr>
+                <tr><th>Taxa de reciclagem</th><td>{{ resumo.total.taxa_reciclagem }}%</td></tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>Sugestão contextualizada</h2>
+            {% if sugestoes.sugestoes_orientadas and sugestoes.sugestoes_orientadas|length > 0 %}
+                {% for s in sugestoes.sugestoes_orientadas %}
+                    {% if s.id_acao == 'A05' or 'residu' in s.regra_aplicada|lower %}
+                        <div class="note">
+                            <strong>Ação sugerida:</strong> {{ s.acao }} (Ação {{ s.id_acao }})<br>
+                            <strong>Regra aplicada:</strong> {{ s.regra_aplicada }}<br>
+                            <strong>Justificativa:</strong> {{ s.justificativa }}<br>
+                            <strong>Evidência (com base nas entradas):</strong> Não reciclado informado: {{ entradas.quantidade_kg }} kg (destino {{ entradas.destino }}).<br>
+                            <strong>Valores financeiros (estimados do catálogo, não calculados para esta empresa):</strong> Investimento sugerido: {{ s.investimento_sugerido }}; Economia estimada mensal: {{ s.economia_estimada_mensal }}; Payback: {{ s.payback_meses }} meses; Prioridade: {{ s.prioridade }}; Natureza financeira: {{ s.natureza_financeira }}<br>
+                            <strong>Observação:</strong> Esses valores são estimados do catálogo, não calculados a partir dos dados informados.
+                        </div>
+                    {% endif %}
+                {% endfor %}
+                {% for s in sugestoes.sugestoes_orientadas %}
+                    {% if s.id_acao != 'A05' and 'residu' not in s.regra_aplicada|lower %}
+                        <div class="note">
+                            <strong>Outra sugestão orientada (catálogo):</strong> {{ s.acao }} (Ação {{ s.id_acao }})<br>
+                            <strong>Regra aplicada:</strong> {{ s.regra_aplicada }}<br>
+                            <strong>Observação:</strong> Apresentada separadamente - neste fluxo de resíduos, a ativação por regra é avaliada com base nos indicadores de resíduos informados. Indicadores sociais: sem_dados (não utilizados como dados da empresa).
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <div class="note">
+                    <strong>Nenhuma sugestão orientada foi ativada por regras existentes neste contexto.</strong><br>
+                    Se <strong>não reciclado (kg) = 0</strong>, a regra para <strong>A05</strong> (exige <em>não reciclado_kg &gt; 0</em>) não é satisfeita. Isso <strong>não</strong> implica que a empresa seja sustentável ou que não precise de melhorias.<br>
+                    Indicadores sociais: <strong>sem_dados</strong> (não reutilizados como dados da empresa).
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="section">
+            <h2>Resumo e limitações</h2>
+            <ul>
+                <li>Entradas informadas pelo usuário, sem verificação externa.</li>
+                <li>Resultados calculados por <code>calcular_resumo_residuos</code> a partir dessas entradas.</li>
+                <li>Valores financeiros são estimados do catálogo (<code>gerar_recomendacoes</code>), não calculados a partir dos dados informados.</li>
+                <li>Acompanhamento F6 permanece demonstrativo (cenário A01), separado desta análise.</li>
+                <li>Este fluxo cobre apenas resíduos - não é diagnóstico completo dos três pilares.</li>
+                <li>Sem cadastro/login nesta etapa; contexto mantido em sessão temporariamente.</li>
+            </ul>
+        </div>
+
+        <div class="links">
+            <a href="/diagnostico/residuos/">Editar dados informados</a>
+            <a href="/diagnostico/residuos/novo/">Iniciar nova análise</a>
+            <a href="/painel-recomendacoes/">Painel de recomendações (demonstração)</a>
+            <a href="/painel-residuos/">Painel de resíduos (demonstração)</a>
+            <a href="/comparativos/">Acompanhamento F6 (demonstração, cenário A01)</a>
+            <a href="/">Início</a>
+        </div>
+    </div>
+</body>
+</html>

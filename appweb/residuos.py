@@ -13,8 +13,9 @@ def validar_dados_residuos(dados):
     if type(dados.get('versao')) is not int or dados['versao'] != 1:
         raise ValueError('A versão deve ser o número inteiro 1.')
 
-    if dados.get('origem') != 'simulada':
-        raise ValueError('Esta versão aceita apenas origem simulada.')
+    origem = dados.get('origem')
+    if origem not in {'simulada', 'informada_pelo_usuario'}:
+        raise ValueError('Esta versão aceita apenas origem simulada ou informada_pelo_usuario.')
 
     registros = dados.get('registros')
 

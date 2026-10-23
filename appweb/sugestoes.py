@@ -143,7 +143,10 @@ def _validar_residuos(indicadores):
     if especial is not None:
         return especial, None
 
-    _validar_origem(indicadores, 'Resíduos')
+    origem = indicadores.get('origem')
+    if origem not in {'simulada', 'informada_pelo_usuario'}:
+        raise ValueError('Indicadores de Resíduos devem ter origem simulada ou informada_pelo_usuario.')
+
     total = indicadores.get('total')
     if not isinstance(total, dict):
         raise ValueError('Indicadores de Resíduos devem conter total.')

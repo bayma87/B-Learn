@@ -149,6 +149,133 @@ def painel_residuos(request):
 
     return render(request, 'appweb/painel_residuos.html', contexto)
 
+
+def diagnostico_residuos_novo(request):
+    request.session.pop('diagnostico_residuos', None)
+    return redirect('diagnostico_residuos')
+
+
+def diagnostico_residuos(request):
+    import re
+    from decimal import Decimal
+    from datetime import date
+    from .residuos import calcular_resumo_residuos
+
+    if request.method == 'POST':
+        local = (request.POST.get('local') or '').strip()
+        data_texto = (request.POST.get('data') or '').strip()
+        quantidade_texto = (request.POST.get('quantidade_kg') or '').strip()
+        destino = (request.POST.get('destino') or '').strip()
+
+        erros = []
+        if not local or len(local) < 1 or len(local) > 100:
+            erros.append('local inválido.')
+        if not data_texto:
+            erros.append('data obrigatória.')
+        else:
+            try:
+                data_reg = date.fromisoformat(data_texto)
+                if data_reg.isoformat() != data_texto:
+                    erros.append('use data AAAA-MM-DD.')
+            except Exception:
+                erros.append('data inválida.')
+        if not quantidade_texto:
+            erros.append('quantidade obrigatória.')
+        elif not re.fullmatch(r'[0-9]{1,8}\.[0-9]{2}', quantidade_texto):
+            erros.append('quantidade inválida. Use formato 0.00 com até oito dígitos antes do ponto.')
+        else:
+            try:
+                qv = Decimal(quantidade_texto)
+                if qv < 0:
+                    erros.append('quantidade deve ser não negativa.')
+            except Exception:
+                erros.append('quantidade inválida.')
+        if destino not in {'reciclado', 'nao_reciclado'}:
+            erros.append('destino inválido.')
+
+        if erros:
+            contexto = {
+                'erros': erros,
+                'valores': {
+                    'local': local,
+                    'data': data_texto,
+                    'quantidade_kg': quantidade_texto,
+                    'destino': destino,
+                },
+                'contexto_origem': 'entradas_informadas_pelo_usuario_sem_verificacao_externa',
+            }
+            return render(request, 'appweb/diagnostico_residuos.html', contexto)
+
+        id_leitura = f'USER-RES-{request.session.session_key or "anon"}-{data_texto}-{quantidade_texto}'
+        dados = {
+            'versao': 1,
+            'origem': 'informada_pelo_usuario',
+            'registros': [
+                {
+                    'id_leitura': id_leitura,
+                    'data': data_texto,
+                    'local': local,
+                    'quantidade_kg': quantidade_texto,
+                    'destino': destino,
+                }
+            ],
+        }
+
+        try:
+            resumo = calcular_resumo_residuos(dados)
+        except Exception as e:
+            contexto = {
+                'erros': [str(e)],
+                'valores': {
+                    'local': local,
+                    'data': data_texto,
+                    'quantidade_kg': quantidade_texto,
+                    'destino': destino,
+                },
+                'contexto_origem': 'entradas_informadas_pelo_usuario_sem_verificacao_externa',
+            }
+            return render(request, 'appweb/diagnostico_residuos.html', contexto)
+
+        request.session['diagnostico_residuos'] = {
+            'entradas': {
+                'local': local,
+                'data': data_texto,
+                'quantidade_kg': quantidade_texto,
+                'destino': destino,
+                'unidade': 'kg',
+            },
+            'origem_entradas': 'informadas_pelo_usuario_sem_verificacao_externa',
+            'resumo_calculado': resumo,
+        }
+
+        indicadores_residuos = resumo
+        indicadores_sociais = {'situacao': 'sem_dados'}
+
+        try:
+            from .recomendacoes import gerar_recomendacoes
+            from .sugestoes import selecionar_sugestoes_orientadas
+            recomendacoes_list = gerar_recomendacoes()
+            sugestoes_res = selecionar_sugestoes_orientadas(recomendacoes_list, indicadores_sociais, indicadores_residuos)
+        except Exception:
+            sugestoes_res = {'sugestoes_orientadas': [], 'avaliacao_fontes': {'social': {'situacao': 'sem_dados'}, 'residuos': {'situacao': 'avaliada'}}}
+
+        request.session['diagnostico_residuos']['sugestoes'] = sugestoes_res
+
+        contexto = {
+            'entradas': request.session['diagnostico_residuos']['entradas'],
+            'origem_entradas': request.session['diagnostico_residuos']['origem_entradas'],
+            'resumo': resumo,
+            'sugestoes': sugestoes_res,
+            'contexto_origem_residuos': 'calculado_a_partir_das_entradas',
+            'valores_financeiros_origem': 'estimados_do_catalogo',
+            'acompanhamento_f6': 'demonstrativo_cenario_A01_separado',
+        }
+        return render(request, 'appweb/diagnostico_residuos_resultado.html', contexto)
+
+    contexto = {'valores': {}, 'contexto_origem': 'entradas_informadas_pelo_usuario_sem_verificacao_externa'}
+    return render(request, 'appweb/diagnostico_residuos.html', contexto)
+
+
 @require_GET
 def resumo_residuos(request):
     caminho = (

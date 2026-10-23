@@ -1,0 +1,56 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise de Resíduos - Entrada de Dados</title>
+    <style>
+        body { font-family: Arial, sans-serif; background:#0a0c10; color:#f3e7ef; margin:0; padding:20px; }
+        .container { max-width: 700px; margin: 40px auto; background: rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:24px; }
+        .note { background: rgba(255,255,255,0.05); padding:10px; border-radius:6px; margin-bottom:16px; }
+        label { display:block; margin:10px 0 4px; }
+        input, select { width:100%; padding:10px; background:#111; color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:4px; }
+        button { margin-top:16px; padding:10px 16px; background:#c464cc; color:#fff; border:none; border-radius:4px; cursor:pointer; }
+        .error { color:#ff8080; margin-bottom:8px; }
+        .links { margin-top:16px; }
+        .links a { color:#f2d7af; margin-right:12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Análise de Resíduos</h1>
+        <div class="note">
+            <strong>Origem dos dados:</strong> {{ contexto_origem|default:"entradas_informadas_pelo_usuario_sem_verificacao_externa" }}.<br>
+            <strong>Escopo:</strong> Este fluxo cobre apenas <strong>resíduos</strong>. Não é um diagnóstico completo dos pilares ambiental, social e governança.<br>
+            <strong>Cálculo:</strong> Os valores serão calculados por <code>calcular_resumo_residuos</code> com o contrato real do módulo (aceita origem <em>simulada</em> ou <em>informada_pelo_usuario</em>).
+        </div>
+        {% if erros %}
+            {% for e in erros %}
+                <div class="error">- {{ e }}</div>
+            {% endfor %}
+        {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            <label>Local (1-100 caracteres)</label>
+            <input name="local" value="{{ valores.local|default:'' }}" required>
+            <label>Data (AAAA-MM-DD)</label>
+            <input type="date" name="data" value="{{ valores.data|default:'' }}" required>
+            <label>Quantidade (kg) - formato 0.00</label>
+            <input name="quantidade_kg" value="{{ valores.quantidade_kg|default:'' }}" placeholder="12.50" required>
+            <label>Destino</label>
+            <select name="destino" required>
+                <option value="">Selecione</option>
+                <option value="reciclado" {% if valores.destino == 'reciclado' %}selected{% endif %}>reciclado</option>
+                <option value="nao_reciclado" {% if valores.destino == 'nao_reciclado' %}selected{% endif %}>nao_reciclado</option>
+            </select>
+            <button type="submit">Calcular e obter sugestão contextualizada</button>
+        </form>
+        <div class="links">
+            <a href="/">Início</a>
+            <a href="/painel-residuos/">Painel de resíduos (demonstração)</a>
+            <a href="/diagnostico/residuos/novo/">Iniciar nova análise</a>
+        </div>
+    </div>
+</body>
+</html>

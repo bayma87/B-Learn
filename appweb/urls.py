@@ -16,6 +16,16 @@ urlpatterns = [
         name='indicadores_sociais',
     ),
     path(
+        'diagnostico/residuos/',
+        views.diagnostico_residuos,
+        name='diagnostico_residuos',
+    ),
+    path(
+        'diagnostico/residuos/novo/',
+        views.diagnostico_residuos_novo,
+        name='diagnostico_residuos_novo',
+    ),
+    path(
         'recomendacoes',
         views.recomendacoes_esg,
         name='recomendacoes',

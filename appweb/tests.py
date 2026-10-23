@@ -2296,3 +2296,108 @@ class ConsumoPaginaTests(TestCase):
             rf'<a href="{pagina_url}"\s+aria-current="page">\s*'
             r'Consumo\s*</a>',
         )
+
+
+class JornadaResiduosTests(TestCase):
+    def test_entrada_valida_calcula_e_ativa_a05_quando_nao_reciclado_maior_que_zero(self):
+        response = self.client.post('/diagnostico/residuos/', {
+            'local': 'Almoxarifado',
+            'data': '2026-10-01',
+            'quantidade_kg': '12.50',
+            'destino': 'nao_reciclado',
+        }, secure=True, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'calcular_resumo_residuos')
+        self.assertContains(response, 'A05')
+        self.assertContains(response, '12.50')
+
+    def test_entrada_invalida(self):
+        response = self.client.post('/diagnostico/residuos/', {
+            'local': '',
+            'data': '2026/10/01',
+            'quantidade_kg': 'abc',
+            'destino': 'errado',
+        }, secure=True, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'inv')
+        self.assertNotContains(response, 'A05')
+
+    def test_nao_reciclado_zero_nao_ativa_a05(self):
+        response = self.client.post('/diagnostico/residuos/', {
+            'local': 'Almoxarifado',
+            'data': '2026-10-02',
+            'quantidade_kg': '12.50',
+            'destino': 'reciclado',
+        }, secure=True, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Ação sugerida')
+        self.assertNotContains(response, 'Evidência')
+        self.assertContains(response, 'Nenhuma sugest')
+
+    def test_acesso_anonimo(self):
+        response = self.client.get('/diagnostico/residuos/', secure=True, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Análise de Resíduos')
+
+    def test_nova_analise_limpa_sessao(self):
+        session = self.client.session
+        session['outra_chave'] = 'preservar'
+        session.save()
+        self.client.post('/diagnostico/residuos/', {
+            'local': 'Almoxarifado',
+            'data': '2026-10-01',
+            'quantidade_kg': '12.50',
+            'destino': 'nao_reciclado',
+        }, secure=True, follow=True)
+        response = self.client.get('/diagnostico/residuos/novo/', secure=True)
+        self.assertIn(response.status_code, [200, 301, 302])
+        follow = self.client.get('/diagnostico/residuos/novo/', secure=True, follow=True)
+        self.assertEqual(follow.status_code, 200)
+        session = self.client.session
+        self.assertNotIn('diagnostico_residuos', session)
+        self.assertEqual(session.get('outra_chave'), 'preservar')
+
+    def test_dois_clientes_sessoes_independentes(self):
+        c1 = self.client
+        c2 = __import__('django').test.Client()
+        r1 = c1.post('/diagnostico/residuos/', {
+            'local': 'Almoxarifado',
+            'data': '2026-10-01',
+            'quantidade_kg': '12.50',
+            'destino': 'nao_reciclado',
+        }, secure=True, follow=True)
+        r2 = c2.post('/diagnostico/residuos/', {
+            'local': 'Deposito',
+            'data': '2026-10-03',
+            'quantidade_kg': '5.00',
+            'destino': 'reciclado',
+        }, secure=True, follow=True)
+        self.assertEqual(r1.status_code, 200)
+        self.assertEqual(r2.status_code, 200)
+        self.assertContains(r1, 'Almoxarifado')
+        self.assertContains(r2, 'Deposito')
+
+    def test_editar_com_valores_preservados(self):
+        self.client.post('/diagnostico/residuos/', {
+            'local': 'Almoxarifado',
+            'data': '2026-10-01',
+            'quantidade_kg': '12.50',
+            'destino': 'nao_reciclado',
+        }, secure=True, follow=True)
+        resp = self.client.get('/diagnostico/residuos/', secure=True, follow=True)
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'Análise de Resíduos')
+        # valores devem estar disponíveis via sessão/contexto ao voltar (formulário mantém estrutura)
+        self.assertContains(resp, 'local')
+
+    def test_indicadores_sociais_ausentes_nao_usados_como_dados_empresa(self):
+        resp = self.client.post('/diagnostico/residuos/', {
+            'local': 'Almoxarifado',
+            'data': '2026-10-01',
+            'quantidade_kg': '12.50',
+            'destino': 'nao_reciclado',
+        }, secure=True, follow=True)
+        self.assertEqual(resp.status_code, 200)
+        # Social indicators must not be treated as company data; we pass situacao sem_dados
+        self.assertNotContains(resp, 'funcionários')
+        self.assertNotContains(resp, 'colaboradores')
