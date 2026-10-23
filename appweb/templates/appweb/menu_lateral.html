@@ -198,6 +198,16 @@
             Recomendações
         </a>
 
+        <a href="{% url 'painel_microlearning' %}"
+           {% if pagina_atual == 'microlearning' %}aria-current="page"{% endif %}>
+            Aprenda ESG
+        </a>
+
+        <a href="{% url 'painel_fornecedores' %}"
+           {% if pagina_atual == 'fornecedores' %}aria-current="page"{% endif %}>
+            Fornecedores
+        </a>
+
         <a href="{% url 'quem_somos' %}"
            {% if pagina_atual == 'quem_somos' %}aria-current="page"{% endif %}>
             Quem somos

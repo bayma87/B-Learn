@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fornecedores sustentáveis | ESG Impact</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #2b0d2f;
+            color: #f3e7ef;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        header {
+            padding: 20px 24px;
+            background: #07080c;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        a {
+            color: #f3e7ef;
+            text-underline-offset: 4px;
+        }
+
+        .marca {
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-decoration: none;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 48px 24px;
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        section {
+            margin-bottom: 40px;
+        }
+
+        .intro {
+            line-height: 1.6;
+        }
+
+        form {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: end;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding: 20px;
+            background: #1b081f;
+            border: 2px solid rgba(255, 255, 255, 0.14);
+            border-radius: 14px;
+        }
+
+        form label {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 0.9rem;
+        }
+
+        form label.linha {
+            flex-direction: row;
+            align-items: center;
+        }
+
+        input[type="number"],
+        select {
+            min-width: 150px;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: #2b0d2f;
+            color: #f3e7ef;
+        }
+
+        button {
+            padding: 10px 18px;
+            border: 0;
+            border-radius: 8px;
+            background: #f2d7af;
+            color: #2b0d2f;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible {
+            outline: 2px solid #f2d7af;
+            outline-offset: 3px;
+        }
+
+        .cartoes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        article {
+            padding: 24px;
+            background: #1b081f;
+            border: 2px solid rgba(255, 255, 255, 0.14);
+            border-radius: 14px;
+        }
+
+        article h3 {
+            margin: 0 0 8px;
+        }
+
+        article p {
+            line-height: 1.5;
+            margin: 0 0 10px;
+        }
+
+        .detalhe {
+            color: #cdb7c6;
+            font-size: 0.9rem;
+        }
+
+        .nota {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .nivel-alta {
+            border-color: #81d6a4;
+        }
+
+        .nivel-alta .nota {
+            color: #81d6a4;
+        }
+
+        .nivel-media {
+            border-color: #f5d76e;
+        }
+
+        .nivel-media .nota {
+            color: #f5d76e;
+        }
+
+        .nivel-baixa {
+            border-color: #ff9b9b;
+        }
+
+        .nivel-baixa .nota {
+            color: #ff9b9b;
+        }
+
+        .selo {
+            display: inline-block;
+            margin: 0 6px 10px 0;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.1);
+            font-size: 0.8rem;
+        }
+
+        .selo.ok {
+            background: #81d6a4;
+            color: #2b0d2f;
+        }
+
+        .selo.alerta {
+            background: #ff9b9b;
+            color: #2b0d2f;
+        }
+
+        .alerta-texto {
+            color: #ff9b9b;
+        }
+
+        ul.indicadores,
+        ul.produtos {
+            margin: 0 0 12px;
+            padding-left: 20px;
+            line-height: 1.6;
+        }
+
+        .tabela-comparacao {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 12px;
+        }
+
+        .tabela-comparacao th,
+        .tabela-comparacao td {
+            padding: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        .economia {
+            font-weight: 700;
+        }
+
+        .economia.positiva {
+            color: #81d6a4;
+        }
+
+        .economia.negativa {
+            color: #f5d76e;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        {% include 'appweb/menu_lateral.html' with pagina_atual='fornecedores' %}
+
+        <a class="marca" href="{% url 'home' %}">ESG IMPACT</a>
+    </header>
+
+    <main>
+        <h1>Fornecedores sustentáveis</h1>
+        <p class="intro">
+            Compare fornecedores com base em dados medidos na fábrica deles, e
+            não só no que eles dizem sobre si. Veja também quanto um produto
+            ecológico custa ao longo do uso em comparação com um tradicional.
+        </p>
+
+        <form id="filtros">
+            <label>
+                Categoria
+                <select id="categoria" name="categoria">
+                    <option value="">Todas</option>
+                </select>
+            </label>
+
+            <label>
+                Nota ESG mínima (0 a 100)
+                <input type="number" id="nota-minima" name="nota_minima"
+                       min="0" max="100" step="1" value="0">
+            </label>
+
+            <label>
+                Preço máximo por unidade (R$)
+                <input type="number" id="preco-maximo" name="preco_maximo"
+                       min="0" step="0.01" placeholder="Sem limite">
+            </label>
+
+            <label class="linha">
+                <input type="checkbox" id="somente-auditados" checked>
+                Somente dados auditados
+            </label>
+
+            <button type="submit">Filtrar</button>
+        </form>
+
+        <p id="mensagem-dados" role="status" aria-live="polite">
+            Carregando dados simulados...
+        </p>
+
+        <section aria-labelledby="titulo-comparativos">
+            <h2 id="titulo-comparativos">Ecológico x tradicional</h2>
+            <p class="detalhe" id="premissas"></p>
+            <div class="cartoes" id="comparativos"></div>
+        </section>
+
+        <section aria-labelledby="titulo-fornecedores">
+            <h2 id="titulo-fornecedores">Fornecedores</h2>
+            <div class="cartoes" id="fornecedores"></div>
+        </section>
+    </main>
+
+    <script>
+        const URL_DADOS = "{% url 'dados_fornecedores' %}";
+        const mensagem = document.getElementById('mensagem-dados');
+        const NIVEIS = { alta: 'Alta', media: 'Média', baixa: 'Baixa' };
+
+        function el(tag, texto, classe) {
+            const no = document.createElement(tag);
+            if (texto !== undefined) no.textContent = texto;
+            if (classe) no.className = classe;
+            return no;
+        }
+
+        function num(valor, casas) {
+            return Number(valor).toLocaleString('pt-BR', {
+                minimumFractionDigits: casas,
+                maximumFractionDigits: casas
+            });
+        }
+
+        function reais(valor) {
+            return 'R$ ' + num(valor, 2);
+        }
+
+        function cartaoFornecedor(f) {
+            const cartao = el('article', undefined, 'nivel-' + f.nivel);
+            const ind = f.indicadores;
+
+            cartao.append(
+                el('h3', f.nome),
+                el('p', f.cidade, 'detalhe'),
+                el('p', f.nota_esg + ' / 100 - confiança ESG ' + NIVEIS[f.nivel], 'nota')
+            );
+
+            cartao.append(el('span',
+                f.auditado ? 'Auditado por ' + f.auditor + ' em ' + f.data_auditoria
+                           : 'Dados não auditados',
+                f.auditado ? 'selo ok' : 'selo alerta'));
+
+            const indicadores = el('ul', undefined, 'indicadores');
+            [
+                'Energia: ' + num(ind.energia_kwh_por_unidade, 2) + ' kWh por unidade',
+                'Energia renovável: ' + num(ind.energia_renovavel_pct, 1) + '%',
+                'Resíduos reciclados: ' + num(ind.reciclagem_pct, 1) + '%',
+                'Emissões: ' + num(ind.emissoes_kg_por_unidade, 2) + ' kg de CO₂ por unidade'
+            ].forEach(function (texto) {
+                indicadores.append(el('li', texto));
+            });
+            cartao.append(
+                indicadores,
+                el('p', 'Última leitura dos sensores da fábrica: ' + f.ultima_leitura, 'detalhe')
+            );
+
+            f.alertas.forEach(function (alerta) {
+                cartao.append(el('p', '⚠ ' + alerta, 'alerta-texto'));
+            });
+
+            const produtos = el('ul', undefined, 'produtos');
+            f.produtos.forEach(function (p) {
+                produtos.append(el('li',
+                    p.nome + ' (' + (p.tipo === 'ecologico' ? 'ecológico' : 'tradicional')
+                    + ') - ' + reais(p.preco) + ', dura ' + p.durabilidade_meses + ' meses'));
+            });
+            cartao.append(produtos);
+
+            return cartao;
+        }
+
+        function linhaTabela(rotulo, eco, trad) {
+            const linha = el('tr');
+            linha.append(el('th', rotulo), el('td', eco), el('td', trad));
+            return linha;
+        }
+
+        function cartaoComparativo(c, horizonte) {
+            const cartao = el('article');
+            const eco = c.ecologico;
+            const trad = c.tradicional;
+            const economia = Number(c.economia_horizonte);
+
+            const tabela = el('table', undefined, 'tabela-comparacao');
+            const cab = el('tr');
+            cab.append(el('th', ''), el('th', 'Ecológico'), el('th', 'Tradicional'));
+            tabela.append(
+                cab,
+                linhaTabela('Produto', eco.nome, trad.nome),
+                linhaTabela('Preço', reais(eco.preco), reais(trad.preco)),
+                linhaTabela('Durabilidade', eco.durabilidade_meses + ' meses',
+                    trad.durabilidade_meses + ' meses'),
+                linhaTabela('Consumo', num(eco.consumo_kwh_mes, 2) + ' kWh/mês',
+                    num(trad.consumo_kwh_mes, 2) + ' kWh/mês'),
+                linhaTabela('Custo por mês de uso', reais(eco.custo_mensal),
+                    reais(trad.custo_mensal)),
+                linhaTabela('Custo em ' + horizonte + ' meses', reais(eco.custo_horizonte),
+                    reais(trad.custo_horizonte))
+            );
+
+            cartao.append(el('h3', c.categoria), tabela);
+
+            if (c.ecologico_compensa) {
+                cartao.append(
+                    el('p', 'O ecológico economiza ' + reais(economia) + ' em '
+                        + horizonte + ' meses (' + num(c.economia_pct, 1) + '%).',
+                        'economia positiva'),
+                    el('p', 'Evita ' + num(c.energia_evitada_kwh, 2) + ' kWh de energia e '
+                        + num(c.compras_evitadas, 1) + ' compra(s) de reposição no período.',
+                        'detalhe')
+                );
+            } else {
+                cartao.append(el('p',
+                    'Neste caso o tradicional sai ' + reais(-economia) + ' mais barato em '
+                    + horizonte + ' meses. A escolha ecológica aqui é por impacto, não por custo.',
+                    'economia negativa'));
+            }
+
+            return cartao;
+        }
+
+        function parametros() {
+            const consulta = new URLSearchParams();
+            const categoria = document.getElementById('categoria').value;
+            const preco = document.getElementById('preco-maximo').value;
+
+            if (categoria) consulta.set('categoria', categoria);
+            consulta.set('nota_minima', document.getElementById('nota-minima').value || '0');
+            if (preco) consulta.set('preco_maximo', preco);
+            consulta.set('somente_auditados',
+                document.getElementById('somente-auditados').checked);
+            return consulta.toString();
+        }
+
+        function preencherCategorias(categorias) {
+            const select = document.getElementById('categoria');
+            const atual = select.value;
+
+            if (select.options.length > 1) return;
+
+            categorias.forEach(function (nome) {
+                const opcao = el('option', nome);
+                opcao.value = nome;
+                select.append(opcao);
+            });
+            select.value = atual;
+        }
+
+        async function carregar() {
+            try {
+                const resposta = await fetch(URL_DADOS + '?' + parametros(),
+                    { cache: 'no-store' });
+                const dados = await resposta.json();
+
+                if (!resposta.ok) {
+                    throw new Error(dados.erro || 'Não foi possível consultar a API.');
+                }
+
+                preencherCategorias(dados.categorias_disponiveis);
+
+                const premissas = dados.premissas;
+                document.getElementById('premissas').textContent =
+                    'Premissas do protótipo: horizonte de ' + premissas.horizonte_meses
+                    + ' meses e energia a ' + reais(premissas.tarifa_kwh)
+                    + ' por kWh. Custo por mês = preço dividido pela durabilidade + energia.';
+
+                document.getElementById('comparativos').replaceChildren(
+                    ...dados.comparativos.map(function (c) {
+                        return cartaoComparativo(c, premissas.horizonte_meses);
+                    })
+                );
+                document.getElementById('fornecedores').replaceChildren(
+                    ...dados.fornecedores.map(cartaoFornecedor)
+                );
+
+                mensagem.textContent = dados.total
+                    ? dados.total + ' fornecedor(es) encontrado(s). Dados simulados.'
+                    : 'Nenhum fornecedor atende aos filtros escolhidos.';
+            } catch (erro) {
+                console.error(erro);
+                mensagem.textContent = erro.message
+                    || 'Não foi possível carregar os fornecedores.';
+                document.getElementById('comparativos').replaceChildren();
+                document.getElementById('fornecedores').replaceChildren();
+            }
+        }
+
+        document.getElementById('filtros').addEventListener('submit', function (evento) {
+            evento.preventDefault();
+            carregar();
+        });
+
+        carregar();
+    </script>
+</body>
+</html>

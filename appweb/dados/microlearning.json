@@ -1,0 +1,205 @@
+{
+  "versao": 1,
+  "origem": "simulada",
+  "conceitos": [
+    {
+      "id": "c-ambiental",
+      "pilar": "Ambiental",
+      "titulo": "Ambiental: cuidar dos recursos",
+      "texto": "É usar menos energia, água e materiais, e descartar melhor o que sobra.",
+      "exemplo": "Apagar a luz da sala ao sair e separar o lixo reciclável."
+    },
+    {
+      "id": "c-social",
+      "pilar": "Social",
+      "titulo": "Social: cuidar das pessoas",
+      "texto": "É garantir segurança, respeito e oportunidades para quem trabalha com a gente e para a comunidade.",
+      "exemplo": "Avisar sobre um risco no chão de fábrica antes de alguém se machucar."
+    },
+    {
+      "id": "c-governanca",
+      "pilar": "Governança",
+      "titulo": "Governança: agir com clareza",
+      "texto": "É tomar decisões de forma ética, transparente e com regras claras.",
+      "exemplo": "Registrar uma compra com nota e comparar fornecedores antes de decidir."
+    }
+  ],
+  "quizzes": [
+    {
+      "id": "q1",
+      "pilar": "Ambiental",
+      "pergunta": "O que a sigla ESG representa?",
+      "opcoes": [
+        "Economia, Sociedade e Gestão",
+        "Ambiental, Social e Governança",
+        "Energia, Sustentabilidade e Governo"
+      ],
+      "correta": 1,
+      "explicacao": "ESG vem do inglês Environmental, Social and Governance: ambiental, social e governança.",
+      "pontos": 10
+    },
+    {
+      "id": "q2",
+      "pilar": "Ambiental",
+      "pergunta": "Qual hábito do dia a dia mais ajuda a economizar energia no escritório?",
+      "opcoes": [
+        "Deixar os computadores ligados à noite",
+        "Desligar monitores e luzes ao sair",
+        "Manter o ar-condicionado no mínimo"
+      ],
+      "correta": 1,
+      "explicacao": "Equipamentos ligados sem uso continuam consumindo energia. Desligar ao sair é simples e reduz a conta.",
+      "pontos": 10
+    },
+    {
+      "id": "q3",
+      "pilar": "Social",
+      "pergunta": "Você viu um fio solto perto de uma máquina. O que fazer?",
+      "opcoes": [
+        "Ignorar, alguém vai ver",
+        "Avisar o responsável e sinalizar o local",
+        "Esperar acontecer algo para reportar"
+      ],
+      "correta": 1,
+      "explicacao": "Avisar rápido evita acidentes. Cuidar da segurança da equipe faz parte do pilar Social.",
+      "pontos": 10
+    },
+    {
+      "id": "q4",
+      "pilar": "Governança",
+      "pergunta": "O que é governança no dia a dia da empresa?",
+      "opcoes": [
+        "Seguir regras claras e agir com transparência",
+        "Aumentar as vendas a qualquer custo",
+        "Evitar dar explicações sobre decisões"
+      ],
+      "correta": 0,
+      "explicacao": "Governança é ética, transparência e prestação de contas nas decisões.",
+      "pontos": 10
+    },
+    {
+      "id": "q5",
+      "pilar": "Ambiental",
+      "pergunta": "Uma torneira pingando parece pouco. Por que vale consertar?",
+      "opcoes": [
+        "Porque o desperdício se acumula durante dias e meses",
+        "Porque não faz diferença nenhuma",
+        "Porque só importa em casa"
+      ],
+      "correta": 0,
+      "explicacao": "Pequenos vazamentos somam muitos litros ao longo do tempo, e o custo vai para a empresa e para o planeta.",
+      "pontos": 10
+    },
+    {
+      "id": "q6",
+      "pilar": "Ambiental",
+      "pergunta": "Onde descartar uma embalagem de papelão limpa?",
+      "opcoes": [
+        "No lixo comum, para facilitar",
+        "Na coleta de recicláveis",
+        "Queimando no pátio"
+      ],
+      "correta": 1,
+      "explicacao": "Papelão limpo pode virar matéria-prima de novo. Misturado ao lixo comum, ele se perde.",
+      "pontos": 10
+    }
+  ],
+  "desafios": [
+    {
+      "id": "d1",
+      "pilar": "Ambiental",
+      "titulo": "Desligue tudo ao fim do expediente",
+      "descricao": "Antes de sair, desligue monitor, impressora e luzes da sua área.",
+      "pontos": 15,
+      "impacto": { "tipo": "energia_kwh", "valor": "0.80" }
+    },
+    {
+      "id": "d2",
+      "pilar": "Ambiental",
+      "titulo": "Apague a luz de ambientes vazios",
+      "descricao": "Passou por uma sala ou copa sem ninguém? Apague a luz.",
+      "pontos": 10,
+      "impacto": { "tipo": "energia_kwh", "valor": "0.30" }
+    },
+    {
+      "id": "d3",
+      "pilar": "Ambiental",
+      "titulo": "Reporte um vazamento",
+      "descricao": "Viu torneira ou descarga vazando? Avise a manutenção hoje.",
+      "pontos": 20,
+      "impacto": { "tipo": "agua_l", "valor": "50.00" }
+    },
+    {
+      "id": "d4",
+      "pilar": "Ambiental",
+      "titulo": "Separe os recicláveis",
+      "descricao": "Coloque papel, plástico e papelão na coleta de recicláveis por um dia inteiro.",
+      "pontos": 15,
+      "impacto": { "tipo": "residuos_kg", "valor": "1.50" }
+    },
+    {
+      "id": "d5",
+      "pilar": "Social",
+      "titulo": "Sinalize um risco",
+      "descricao": "Identifique um risco de segurança na sua área e avise o responsável.",
+      "pontos": 20
+    }
+  ],
+  "gatilhos_iot": [
+    {
+      "id": "g1",
+      "sensor": "Medidor de energia",
+      "local": "Sala de reuniões B",
+      "leitura": "1.80",
+      "unidade": "kWh fora do expediente",
+      "limite": "0.50",
+      "condicao": "acima",
+      "mensagem": "A sala está consumindo energia fora do horário de uso.",
+      "desafio_id": "d1"
+    },
+    {
+      "id": "g2",
+      "sensor": "Sensor de presença",
+      "local": "Copa",
+      "leitura": "45.00",
+      "unidade": "min com luz acesa e sem ninguém",
+      "limite": "15.00",
+      "condicao": "acima",
+      "mensagem": "A luz da copa ficou acesa por muito tempo sem ninguém.",
+      "desafio_id": "d2"
+    },
+    {
+      "id": "g3",
+      "sensor": "Medidor de vazão de água",
+      "local": "Banheiro 2",
+      "leitura": "12.00",
+      "unidade": "L/h durante a madrugada",
+      "limite": "2.00",
+      "condicao": "acima",
+      "mensagem": "Há água passando de madrugada, quando ninguém usa o banheiro. Pode ser vazamento.",
+      "desafio_id": "d3"
+    },
+    {
+      "id": "g4",
+      "sensor": "Balança da lixeira comum",
+      "local": "Corredor da produção",
+      "leitura": "38.00",
+      "unidade": "% de recicláveis no lixo comum",
+      "limite": "20.00",
+      "condicao": "acima",
+      "mensagem": "Muito material reciclável está indo para o lixo comum.",
+      "desafio_id": "d4"
+    },
+    {
+      "id": "g5",
+      "sensor": "Termostato do ar-condicionado",
+      "local": "Escritório",
+      "leitura": "24.00",
+      "unidade": "°C ajustados",
+      "limite": "22.00",
+      "condicao": "abaixo",
+      "mensagem": "O ar-condicionado está frio demais e gastando energia.",
+      "desafio_id": "d1"
+    }
+  ]
+}

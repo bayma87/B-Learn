@@ -1,0 +1,82 @@
+{
+  "versao": 1,
+  "origem": "simulada",
+  "fornecedores": [
+    {
+      "id": "f1",
+      "nome": "EcoLuz Indústria",
+      "cidade": "Campinas - SP",
+      "alegacao_sustentavel": true,
+      "auditoria": { "auditado": true, "auditor": "Auditoria Verde (demonstração)", "data": "2026-08-12" },
+      "telemetria": [
+        { "data": "2026-10-14", "unidades_produzidas": 5000, "energia_kwh": "2600.00", "energia_renovavel_kwh": "2100.00", "residuos_kg": "210.00", "residuos_reciclados_kg": "198.00", "emissoes_kg": "3100.00" },
+        { "data": "2026-10-21", "unidades_produzidas": 5200, "energia_kwh": "2500.00", "energia_renovavel_kwh": "2000.00", "residuos_kg": "190.00", "residuos_reciclados_kg": "182.00", "emissoes_kg": "3000.00" }
+      ]
+    },
+    {
+      "id": "f2",
+      "nome": "BrilhoFácil Lâmpadas",
+      "cidade": "Osasco - SP",
+      "alegacao_sustentavel": true,
+      "auditoria": { "auditado": false, "auditor": null, "data": null },
+      "telemetria": [
+        { "data": "2026-10-14", "unidades_produzidas": 4000, "energia_kwh": "26000.00", "energia_renovavel_kwh": "1300.00", "residuos_kg": "900.00", "residuos_reciclados_kg": "180.00", "emissoes_kg": "13600.00" },
+        { "data": "2026-10-21", "unidades_produzidas": 4200, "energia_kwh": "27500.00", "energia_renovavel_kwh": "1400.00", "residuos_kg": "950.00", "residuos_reciclados_kg": "190.00", "emissoes_kg": "14300.00" }
+      ]
+    },
+    {
+      "id": "f3",
+      "nome": "TecnoVerde Equipamentos",
+      "cidade": "Curitiba - PR",
+      "alegacao_sustentavel": true,
+      "auditoria": { "auditado": true, "auditor": "Auditoria Verde (demonstração)", "data": "2026-07-03" },
+      "telemetria": [
+        { "data": "2026-10-14", "unidades_produzidas": 3000, "energia_kwh": "6000.00", "energia_renovavel_kwh": "3600.00", "residuos_kg": "300.00", "residuos_reciclados_kg": "255.00", "emissoes_kg": "3600.00" },
+        { "data": "2026-10-21", "unidades_produzidas": 3100, "energia_kwh": "6200.00", "energia_renovavel_kwh": "3700.00", "residuos_kg": "310.00", "residuos_reciclados_kg": "264.00", "emissoes_kg": "3700.00" }
+      ]
+    },
+    {
+      "id": "f4",
+      "nome": "MegaTela Eletrônicos",
+      "cidade": "Manaus - AM",
+      "alegacao_sustentavel": false,
+      "auditoria": { "auditado": true, "auditor": "Auditoria Verde (demonstração)", "data": "2026-06-20" },
+      "telemetria": [
+        { "data": "2026-10-14", "unidades_produzidas": 3000, "energia_kwh": "22000.00", "energia_renovavel_kwh": "2200.00", "residuos_kg": "600.00", "residuos_reciclados_kg": "180.00", "emissoes_kg": "11300.00" },
+        { "data": "2026-10-21", "unidades_produzidas": 3200, "energia_kwh": "24000.00", "energia_renovavel_kwh": "2400.00", "residuos_kg": "640.00", "residuos_reciclados_kg": "190.00", "emissoes_kg": "12100.00" }
+      ]
+    },
+    {
+      "id": "f5",
+      "nome": "Madeira Certa Móveis",
+      "cidade": "Bento Gonçalves - RS",
+      "alegacao_sustentavel": true,
+      "auditoria": { "auditado": true, "auditor": "Auditoria Verde (demonstração)", "data": "2026-09-01" },
+      "telemetria": [
+        { "data": "2026-10-14", "unidades_produzidas": 1500, "energia_kwh": "4200.00", "energia_renovavel_kwh": "2300.00", "residuos_kg": "150.00", "residuos_reciclados_kg": "135.00", "emissoes_kg": "2100.00" },
+        { "data": "2026-10-21", "unidades_produzidas": 1500, "energia_kwh": "4200.00", "energia_renovavel_kwh": "2300.00", "residuos_kg": "150.00", "residuos_reciclados_kg": "135.00", "emissoes_kg": "2100.00" }
+      ]
+    },
+    {
+      "id": "f6",
+      "nome": "Móveis Barato Ltda",
+      "cidade": "Goiânia - GO",
+      "alegacao_sustentavel": true,
+      "auditoria": { "auditado": true, "auditor": "Auditoria Verde (demonstração)", "data": "2026-05-15" },
+      "telemetria": [
+        { "data": "2026-10-14", "unidades_produzidas": 2000, "energia_kwh": "10000.00", "energia_renovavel_kwh": "500.00", "residuos_kg": "400.00", "residuos_reciclados_kg": "100.00", "emissoes_kg": "6200.00" },
+        { "data": "2026-10-21", "unidades_produzidas": 2000, "energia_kwh": "10400.00", "energia_renovavel_kwh": "500.00", "residuos_kg": "420.00", "residuos_reciclados_kg": "100.00", "emissoes_kg": "6400.00" }
+      ]
+    }
+  ],
+  "produtos": [
+    { "id": "p1", "fornecedor_id": "f1", "nome": "Lâmpada LED 12 W", "categoria": "Iluminação", "tipo": "ecologico", "preco": "22.00", "durabilidade_meses": 60, "consumo_kwh_mes": "2.60" },
+    { "id": "p2", "fornecedor_id": "f2", "nome": "Lâmpada halógena 53 W", "categoria": "Iluminação", "tipo": "tradicional", "preco": "6.50", "durabilidade_meses": 12, "consumo_kwh_mes": "11.70" },
+    { "id": "p3", "fornecedor_id": "f3", "nome": "Monitor 24\" eficiente", "categoria": "Monitores", "tipo": "ecologico", "preco": "900.00", "durabilidade_meses": 96, "consumo_kwh_mes": "4.00" },
+    { "id": "p4", "fornecedor_id": "f4", "nome": "Monitor 24\" convencional", "categoria": "Monitores", "tipo": "tradicional", "preco": "650.00", "durabilidade_meses": 60, "consumo_kwh_mes": "9.00" },
+    { "id": "p5", "fornecedor_id": "f3", "nome": "Impressora duplex econômica", "categoria": "Impressoras", "tipo": "ecologico", "preco": "1400.00", "durabilidade_meses": 72, "consumo_kwh_mes": "6.00" },
+    { "id": "p6", "fornecedor_id": "f4", "nome": "Impressora convencional", "categoria": "Impressoras", "tipo": "tradicional", "preco": "900.00", "durabilidade_meses": 36, "consumo_kwh_mes": "14.00" },
+    { "id": "p7", "fornecedor_id": "f5", "nome": "Cadeira de madeira certificada", "categoria": "Cadeiras", "tipo": "ecologico", "preco": "1200.00", "durabilidade_meses": 120, "consumo_kwh_mes": "0.00" },
+    { "id": "p8", "fornecedor_id": "f6", "nome": "Cadeira de aglomerado", "categoria": "Cadeiras", "tipo": "tradicional", "preco": "450.00", "durabilidade_meses": 48, "consumo_kwh_mes": "0.00" }
+  ]
+}

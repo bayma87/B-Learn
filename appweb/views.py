@@ -7,9 +7,20 @@ from django.conf import settings
 from django.db.models import Sum
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
 
 from .forms import ContactMessageForm
+from .fornecedores import (
+    carregar_dados_fornecedores,
+    consultar_catalogo,
+    interpretar_filtros,
+)
+from .microlearning import (
+    calcular_progresso,
+    carregar_catalogo,
+    montar_painel,
+    registrar_resposta,
+)
 from .consumo import (
     carregar_dados_consumo,
     calcular_indicadores_consumo,
@@ -320,5 +331,109 @@ def recomendacoes_esg(request):
             'acompanhamento': acompanhamento,
             'avaliacao_fontes': sugestoes['avaliacao_fontes'],
         },
+        json_dumps_params={'ensure_ascii': False},
+    )
+
+
+def _concluidos_da_sessao(request):
+    concluidos = request.session.get('microlearning', [])
+
+    if not isinstance(concluidos, list):
+        return set()
+
+    return {item for item in concluidos if isinstance(item, str)}
+
+
+def painel_microlearning(request):
+    return render(request, 'appweb/microlearning.html')
+
+
+@require_GET
+def dados_microlearning(request):
+    try:
+        catalogo = carregar_catalogo()
+    except (OSError, UnicodeError, ValueError):
+        logger.exception('Erro ao processar o catálogo de microlearning.')
+
+        return JsonResponse(
+            {'erro': 'Não foi possível carregar o conteúdo de aprendizado.'},
+            status=500,
+        )
+
+    return JsonResponse(
+        montar_painel(catalogo, _concluidos_da_sessao(request)),
+        json_dumps_params={'ensure_ascii': False},
+    )
+
+
+@require_POST
+def responder_microlearning(request):
+    try:
+        catalogo = carregar_catalogo()
+    except (OSError, UnicodeError, ValueError):
+        logger.exception('Erro ao processar o catálogo de microlearning.')
+
+        return JsonResponse(
+            {'erro': 'Não foi possível carregar o conteúdo de aprendizado.'},
+            status=500,
+        )
+
+    try:
+        corpo = json.loads(request.body)
+
+        if not isinstance(corpo, dict):
+            raise ValueError('O corpo deve ser um objeto JSON.')
+
+        resultado, concluidos = registrar_resposta(
+            catalogo,
+            _concluidos_da_sessao(request),
+            corpo.get('id'),
+            corpo.get('resposta'),
+        )
+    except ValueError as erro:
+        return JsonResponse(
+            {'erro': str(erro)},
+            status=400,
+            json_dumps_params={'ensure_ascii': False},
+        )
+
+    request.session['microlearning'] = sorted(concluidos)
+
+    return JsonResponse(
+        {
+            'resultado': resultado,
+            'progresso': calcular_progresso(catalogo, concluidos),
+        },
+        json_dumps_params={'ensure_ascii': False},
+    )
+
+
+def painel_fornecedores(request):
+    return render(request, 'appweb/fornecedores.html')
+
+
+@require_GET
+def dados_fornecedores(request):
+    try:
+        filtros = interpretar_filtros(request.GET)
+    except ValueError as erro:
+        return JsonResponse(
+            {'erro': str(erro)},
+            status=400,
+            json_dumps_params={'ensure_ascii': False},
+        )
+
+    try:
+        fornecedores, produtos = carregar_dados_fornecedores()
+    except (OSError, UnicodeError, ValueError):
+        logger.exception('Erro ao processar os dados de fornecedores.')
+
+        return JsonResponse(
+            {'erro': 'Não foi possível carregar o catálogo de fornecedores.'},
+            status=500,
+        )
+
+    return JsonResponse(
+        consultar_catalogo(fornecedores, produtos, filtros),
         json_dumps_params={'ensure_ascii': False},
     )
