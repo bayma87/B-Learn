@@ -280,3 +280,60 @@ A análise comparativa demonstra que as plataformas pesquisadas oferecem recurso
 4. Contribuicoes: Arthur - PR15 parcial (consumo.py F1, comparativos.py formulas F6). Pedro - conteudo do gerador PR16 adaptado para catalogo, calculo financeiro e painel de recomendacoes. Integracao - sugestoes.py e complemento novo (nao atribuido ao PR16), demais complementos de conexao/API/painel/validacao/escenario F6/testes/resolucao conflitos. Preservados quiz e ESGPillar (migracao 0003). Lista original de autores preservada; sem emails/coautoria inventados.
 
 5. Demonstracao: consumo -> equipamentos -> Social -> Residuos -> catalogo/recomendacoes -> acompanhamento. Resultado da ultima validacao: 120 testes aprovados (117 Django + 3 Flask), branch integracao/entrega-h1, commit 5f6393c.
+
+
+## Histórias de Usuário Implementadas
+
+### História 1 — Monitoramento ESG com IoT
+Objetivo: Monitorar os recursos e as operações da empresa para identificar desperdícios, melhorar a eficiência e acompanhar os resultados das ações sustentáveis.
+
+Funcionalidades:
+
+Monitoramento do consumo de energia, água e outros recursos.
+
+Acompanhamento do consumo e do desempenho dos equipamentos.
+
+Monitoramento de indicadores relacionados à segurança e ao ambiente de trabalho.
+
+Controle da geração e do descarte de resíduos.
+
+Apresentação de indicadores e recomendações para apoiar decisões de investimento ESG.
+
+Acompanhamento dos resultados das ações sustentáveis implementadas.
+
+### História 2 — Educação ESG para Colaboradores
+Objetivo: Facilitar o aprendizado sobre ESG e incentivar práticas sustentáveis no cotidiano dos colaboradores.
+
+Funcionalidades:
+
+Apresentação de conteúdos educativos sobre ESG em formato de microlearning.
+
+Utilização de quizzes e desafios rápidos para estimular o aprendizado.
+
+Atividades interativas relacionadas à rotina de trabalho.
+
+Integração com sensores e dispositivos IoT para incentivar hábitos sustentáveis.
+
+Incentivo à participação dos colaboradores nas práticas ESG da empresa.
+
+### História 3 — Catálogo e Avaliação de Fornecedores Sustentáveis
+Objetivo: Auxiliar o setor de compras na identificação e comparação de fornecedores, considerando critérios de sustentabilidade, custos e viabilidade financeira.
+
+Funcionalidades:
+
+Catálogo de fornecedores com informações relacionadas a critérios ESG.
+
+Filtros para facilitar a seleção de fornecedores sustentáveis.
+
+Comparação entre produtos sustentáveis e convencionais.
+
+Análise de custos, durabilidade e consumo de energia.
+
+Utilização de dados de IoT para apoiar a avaliação do desempenho ambiental dos fornecedores.
+
+Apoio à redução de desperdícios e à identificação de possíveis práticas de greenwashing.
+
+
+
+
+
