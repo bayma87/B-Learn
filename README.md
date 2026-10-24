@@ -349,3 +349,7 @@ Como empresário de uma pequena ou média empresa, quero utilizar uma calculador
 
 A plataforma deverá apresentar opções de investimento de baixo, médio e alto custo, estimando possíveis economias, redução de desperdícios e tempo de retorno do investimento, utilizando dados de consumo coletados por sensores IoT quando disponíveis.
 
+### Link do screencast das histórias
+
+https://www.youtube.com/watch?v=cBLt20cLgvs
+https://youtu.be/ZpcUzNf-hzA
