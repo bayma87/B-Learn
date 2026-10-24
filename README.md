@@ -333,7 +333,19 @@ Utilização de dados de IoT para apoiar a avaliação do desempenho ambiental d
 
 Apoio à redução de desperdícios e à identificação de possíveis práticas de greenwashing.
 
+### História 4 - Gerador de relatórios ESG e pegada de carbono
+Como empresário ou gestor de uma pequena ou média empresa, quero emitir relatórios automáticos de pegada de carbono e conformidade ESG a partir dos dados da minha operação, para comprovar a evolução socioambiental da empresa perante clientes, parceiros e instituições financeiras.
+A plataforma deverá calcular automaticamente as emissões diretas e indiretas de carbono cruzando leituras de sensores IoT e dados operacionais, gerando relatórios simplificados alinhados aos padrões do mercado. Além disso, o sistema fornecerá documentação comprobatória para facilitar o acesso a linhas de crédito verde, financiamentos com taxas reduzidas e a homologação em cadeias de suprimentos de grandes empresas.
 
+### História 5 - Painel de indicadores e recomendações ESG
 
+Como gestor de uma pequena ou média empresa, quero visualizar em um único painel os principais indicadores ambientais, sociais e de governança da minha empresa, para entender quais áreas precisam de melhorias e tomar decisões mais estratégicas.
 
+Para isso, quero que a plataforma organize os dados coletados, apresente indicadores de consumo, desperdício, custos e resultados das ações implementadas, além de gerar recomendações priorizadas conforme o impacto esperado, o custo e a viabilidade financeira de cada iniciativa. Assim, poderei acompanhar a evolução ESG da empresa e comprovar os resultados alcançados.
+
+### História 6 - Calculadora de investimento ESG
+
+Como empresário de uma pequena ou média empresa, quero utilizar uma calculadora ESG que considere o porte, o faturamento, o espaço físico e a realidade financeira da minha empresa, para receber sugestões de investimentos sustentáveis adequadas ao meu orçamento e entender o retorno financeiro que essas ações podem gerar.
+
+A plataforma deverá apresentar opções de investimento de baixo, médio e alto custo, estimando possíveis economias, redução de desperdícios e tempo de retorno do investimento, utilizando dados de consumo coletados por sensores IoT quando disponíveis.
 
