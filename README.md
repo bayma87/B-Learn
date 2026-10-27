@@ -1,7 +1,7 @@
-# esg-impact
+# B-Learn
 Plataforma para aumentar a percepção da importância do ESG em pequenas e médias empresas.
 
-# ESG Impact
+# B-Learn
 # link da aplicação no ar:
 https://esg-impact.onrender.com/
 
