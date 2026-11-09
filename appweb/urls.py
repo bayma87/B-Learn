@@ -1,3 +1,4 @@
+
 from django.urls import path
 
 from . import views
@@ -19,6 +20,11 @@ urlpatterns = [
         'recomendacoes',
         views.recomendacoes_esg,
         name='recomendacoes',
+    ),
+    path(
+        'investimentos/simular',
+        views.simular_investimentos,
+        name='simular_investimentos',
     ),
     path(
         'painel-recomendacoes/',
