@@ -1,3 +1,4 @@
+
 import json
 import logging
 from decimal import Decimal
@@ -37,6 +38,10 @@ from .equipamentos import (
 )
 from .models import RegistroResiduo
 from .recomendacoes import gerar_recomendacoes
+from .perfil_empresa import (
+    validar_perfil_empresa,
+    filtrar_acoes_por_perfil,
+)
 from .residuos import calcular_resumo_residuos
 from .social import calcular_indicadores_sociais
 from .sugestoes import selecionar_sugestoes_orientadas
@@ -330,6 +335,37 @@ def recomendacoes_esg(request):
             'sugestoes_orientadas': sugestoes_orientadas,
             'acompanhamento': acompanhamento,
             'avaliacao_fontes': sugestoes['avaliacao_fontes'],
+        },
+        json_dumps_params={'ensure_ascii': False},
+    )
+
+
+@require_POST
+def simular_investimentos(request):
+    try:
+        dados = json.loads(request.body)
+
+        perfil = validar_perfil_empresa(dados)
+
+        recomendacoes = gerar_recomendacoes()
+
+        recomendacoes_viaveis = filtrar_acoes_por_perfil(
+            recomendacoes,
+            perfil,
+        )
+
+    except (ValueError, TypeError, KeyError):
+        return JsonResponse(
+            {'erro': 'Dados inválidos para simular os investimentos.'},
+            status=400,
+        )
+
+    return JsonResponse(
+        {
+            'origem': 'simulada',
+            'total': len(recomendacoes_viaveis),
+            'perfil_validado': True,
+            'recomendacoes': recomendacoes_viaveis,
         },
         json_dumps_params={'ensure_ascii': False},
     )
