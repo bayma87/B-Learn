@@ -1,12 +1,15 @@
 from django.urls import path
 
-from . import views
-
+from . import views, painel_esg
 
 urlpatterns = [
     path('', views.home, name='home'),
-    path('quiz/', views.quiz, name='quiz'),
     path('quem-somos/', views.quem_somos, name='quem_somos'),
+    path(
+        'api/painel-esg/',
+        painel_esg.painel_esg_api,
+        name='painel_esg_api',
+    ),
     path('residuos/', views.painel_residuos, name='painel_residuos'),
     path('residuos/resumo', views.resumo_residuos, name='resumo_residuos'),
     path('social/', views.painel_social, name='painel_social'),
