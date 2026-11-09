@@ -50,3 +50,36 @@ def validar_perfil_empresa(dados):
         'porte': porte,
         **valores,
     }
+from decimal import ROUND_CEILING
+
+
+def filtrar_acoes_por_perfil(recomendacoes, perfil):
+    orcamento_total = perfil['orcamento_total']
+    orcamento_mensal = perfil['orcamento_mensal']
+
+    recomendacoes_viaveis = []
+
+    for recomendacao in recomendacoes:
+        custo = Decimal(
+            recomendacao['investimento_sugerido']['recomendado']
+        )
+
+        if custo > orcamento_total:
+            continue
+
+        meses = int(
+            (custo / orcamento_mensal).to_integral_value(
+                rounding=ROUND_CEILING
+            )
+        )
+
+        item = recomendacao.copy()
+        item['meses_para_juntar'] = meses
+
+        recomendacoes_viaveis.append(item)
+
+    recomendacoes_viaveis.sort(
+        key=lambda item: item['meses_para_juntar']
+    )
+
+    return recomendacoes_viaveis
