@@ -333,9 +333,8 @@ Utilização de dados de IoT para apoiar a avaliação do desempenho ambiental d
 
 Apoio à redução de desperdícios e à identificação de possíveis práticas de greenwashing.
 
-### História 4 - Gerador de relatórios ESG e pegada de carbono
-Como empresário ou gestor de uma pequena ou média empresa, quero emitir relatórios automáticos de pegada de carbono e conformidade ESG a partir dos dados da minha operação, para comprovar a evolução socioambiental da empresa perante clientes, parceiros e instituições financeiras.
-A plataforma deverá calcular automaticamente as emissões diretas e indiretas de carbono cruzando leituras de sensores IoT e dados operacionais, gerando relatórios simplificados alinhados aos padrões do mercado. Além disso, o sistema fornecerá documentação comprobatória para facilitar o acesso a linhas de crédito verde, financiamentos com taxas reduzidas e a homologação em cadeias de suprimentos de grandes empresas.
+### História 4 - Dossiês de Auditoria e Certificação de Pegada de Carbono
+Como gestor de PME em processo de homologação ou captação de recursos, quero gerar e exportar dossiês formais de contabilidade de carbono (Escopos 1, 2 e 3) e conformidade socioambiental alinhados a padrões internacionais (como GHG Protocol e GRI), para submeter a documentação auditável a bancos, fundos de investimento e grandes clientes corporativos de forma rápida e sem necessidade de consultorias externas caras. Para isso, a plataforma deve coletar automaticamente os dados via integração de sensores IoT e sistemas operacionais, aplicar os fatores de emissão oficiais atualizados e compilar um pacote de relatórios exportáveis (PDF/Excel) com assinatura digital, histórico de rastreabilidade de dados e evidências anexas exigidas para concessão de crédito verde e qualificação em concorrências de suprimentos.
 
 ### História 5 - Painel de indicadores e recomendações ESG
 
