@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <title>B-Learn — Home | Protótipo</title>
+    <link rel="stylesheet" href="assets/css/tokens.css">
+    <link rel="stylesheet" href="assets/css/base.css">
+    <link rel="stylesheet" href="assets/css/header.css">
+    <link rel="stylesheet" href="assets/css/home.css">
+</head>
+
+<body id="inicio">
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+    <header class="site-header">
+        <div class="container header__inner">
+            <a class="brand" href="index.html" aria-label="B-Learn — página inicial">
+                <span class="brand__placeholder" aria-hidden="true"></span>
+            </a>
+
+            <nav class="main-nav" aria-label="Navegação principal">
+                <a href="index.html" aria-current="page">Home</a>
+                <a href="index.html#trilhas">Trilhas</a>
+                <a href="sobre.html">Sobre</a>
+            </nav>
+
+            <span class="header__circle" aria-hidden="true"></span>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero container" id="conteudo" tabindex="-1" aria-labelledby="hero-titulo">
+            <div class="hero__content">
+                <p class="badge">TECNOLOGIA + SUSTENTABILIDADE</p>
+
+                <h1 class="hero__title" id="hero-titulo">
+                    <span class="hero__title-line">APRENDA O HOJE.</span>
+                    <span class="hero__title-line">TRANSFORME O AMANHÃ.</span>
+                </h1>
+
+                <p class="hero__text">
+                    Descubra como a Internet das Coisas pode contribuir
+                    para práticas mais sustentáveis e decisões empresariais
+                    responsáveis.
+                </p>
+
+                <div class="hero__actions">
+                    <a class="btn btn--verde" href="#trilhas">Explorar trilhas</a>
+                    <a class="btn btn--lilas" href="sobre.html">Sobre o B-Learn</a>
+                </div>
+            </div>
+
+            <div class="hero__media" aria-hidden="true"></div>
+        </section>
+
+        <section class="trilhas container" id="trilhas" aria-labelledby="trilhas-titulo">
+            <h2 class="sr-only" id="trilhas-titulo">Trilhas</h2>
+
+            <div class="trilhas__grid">
+                <article class="card" aria-labelledby="introducao-titulo">
+                    <div class="card__media" aria-hidden="true"></div>
+                    <p class="card__eyebrow">Introdução</p>
+                    <h3 class="card__title" id="introducao-titulo">Entendendo o ESG</h3>
+                    <p class="card__text">
+                        Conheça os pilares ambiental, social e governança e entenda
+                        como as empresas gerenciam seus impactos.
+                    </p>
+                    <a class="btn btn--roxo" href="introducao-esg.html">
+                        Acessar introdução<span class="sr-only"> — Entendendo o ESG</span>
+                    </a>
+                </article>
+
+                <article class="card" aria-labelledby="trilha-1-titulo">
+                    <div class="card__media" aria-hidden="true"></div>
+                    <p class="card__eyebrow">Trilha 01</p>
+                    <h3 class="card__title" id="trilha-1-titulo">Environmental / Ambiental</h3>
+                    <p class="card__text">
+                        Veja como a energia, água, resíduos e sensores conectados
+                        ajudam a acompanhar os impactos ambientais.
+                    </p>
+                    <a class="btn btn--roxo" href="trilha-01.html">
+                        Acessar trilha<span class="sr-only"> — Environmental / Ambiental</span>
+                    </a>
+                </article>
+
+                <article class="card" aria-labelledby="trilha-2-titulo">
+                    <div class="card__media" aria-hidden="true"></div>
+                    <p class="card__eyebrow">Trilha 02</p>
+                    <h3 class="card__title" id="trilha-2-titulo">Social</h3>
+                    <p class="card__text">
+                        Conheça temas como diversidade, segurança, acessibilidade
+                        e bem-estar e entenda como a tecnologia pode apoiar
+                        o cuidado com as pessoas.
+                    </p>
+                    <a class="btn btn--roxo" href="trilha-02.html">
+                        Acessar trilha<span class="sr-only"> — Social</span>
+                    </a>
+                </article>
+
+                <article class="card" aria-labelledby="trilha-3-titulo">
+                    <div class="card__media" aria-hidden="true"></div>
+                    <p class="card__eyebrow">Trilha 03</p>
+                    <h3 class="card__title" id="trilha-3-titulo">Governança</h3>
+                    <p class="card__text">
+                        Entenda ética, transparência, responsabilidade e o cuidado
+                        com os dados gerados pela tecnologia.
+                    </p>
+                    <a class="btn btn--roxo" href="trilha-03.html">
+                        Acessar trilha<span class="sr-only"> — Governança</span>
+                    </a>
+                </article>
+
+                <article class="card" aria-labelledby="trilha-4-titulo">
+                    <div class="card__media" aria-hidden="true"></div>
+                    <p class="card__eyebrow">Trilha 04</p>
+                    <h3 class="card__title" id="trilha-4-titulo">Conectando IoT + ESG</h3>
+                    <p class="card__text">
+                        Descubra como sensores e dispositivos conectados geram
+                        dados para apoiar decisões responsáveis.
+                    </p>
+                    <a class="btn btn--roxo" href="trilha-04.html">
+                        Acessar trilha<span class="sr-only"> — Conectando IoT + ESG</span>
+                    </a>
+                </article>
+            </div>
+        </section>
+
+        <section class="final-card container" aria-labelledby="final-titulo">
+            <div class="final-card__media" aria-hidden="true"></div>
+
+            <div class="final-card__content">
+                <p class="card__eyebrow">Trilha final</p>
+                <h2 class="final-card__title" id="final-titulo">ESG + IoT: do impacto à ação</h2>
+                <p class="card__text">
+                    Conecte os pilares do ESG à Internet das Coisas e veja
+                    como transformar dados em ações.
+                </p>
+                <a class="btn btn--roxo" href="trilha-final.html">
+                    Acessar trilha<span class="sr-only"> — ESG + IoT: do impacto à ação</span>
+                </a>
+            </div>
+        </section>
+    </main>
+</body>
+</html>
