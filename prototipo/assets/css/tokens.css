@@ -1,0 +1,40 @@
+:root {
+    /* Cores extraídas da referência visual. */
+    --cor-fundo: #C9B8E9;
+    --cor-superficie: #F4F2F8;
+    --cor-roxo: #6C3CE9;
+    --cor-verde: #299764;
+    --cor-placeholder: #D9D9D9;
+
+    /* Texto e traços. */
+    --cor-texto: #161616;
+    --cor-texto-suave: #3A3A3A;
+    --cor-verde-texto: #071A10;
+    --cor-texto-inverso: #FFFFFF;
+    --cor-borda: #1C1C1C;
+    --cor-foco: #161616;
+
+    /* Estados desabilitados: lilás da paleta com borda tracejada. */
+    --cor-desabilitado-fundo: #C9B8E9;
+    --cor-desabilitado-texto: #241A3D;
+    --cor-desabilitado-borda: #6C3CE9;
+
+    /* Tipografia provisória: não há arquivos de fonte no projeto. */
+    --fonte-base: Roboto, Arial, sans-serif;
+
+    /* Medidas proporcionais à referência de 1920px. */
+    --largura-container: min(91%, 1740px);
+    --altura-cabecalho: clamp(76px, 5.2vw, 100px);
+    --raio-bloco: clamp(28px, 4.17vw, 80px);
+    --raio-media: clamp(18px, 2.3vw, 44px);
+    --raio-controle: 999px;
+    --espaco-hero: clamp(28px, 4.6vw, 88px);
+    --espaco-card: clamp(24px, 2.9vw, 56px);
+    --gap-hero: clamp(32px, 4.2vw, 80px);
+    --gap-colunas: clamp(32px, 5.73vw, 110px);
+    --gap-linhas: clamp(40px, 5.2vw, 100px);
+    --espaco-entre-blocos: clamp(56px, 7.8vw, 150px);
+    --espaco-final: clamp(56px, 5.2vw, 100px);
+    --espaco-fim-pagina: clamp(80px, 8vw, 160px);
+    --margem-topo-hero: clamp(48px, 8.33vw, 160px);
+}

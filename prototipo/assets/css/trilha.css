@@ -1,0 +1,348 @@
+/* Estilo compartilhado das páginas de trilha.
+   Reaproveita tokens, base e cabeçalho das páginas aprovadas. */
+
+/* Painéis */
+
+.trilha-main {
+    padding-top: var(--margem-topo-hero);
+    padding-bottom: var(--espaco-fim-pagina);
+}
+
+#conteudo:focus {
+    outline: none;
+}
+
+.trilha {
+    display: flex;
+    flex-direction: column;
+}
+
+.painel {
+    width: 100%;
+    padding: var(--espaco-card);
+    background: var(--cor-superficie);
+    border: 1.5px solid var(--cor-borda);
+    border-radius: var(--raio-bloco);
+}
+
+.painel + .painel {
+    margin-top: clamp(30px, 3vw, 60px);
+}
+
+/* Faixa verde decorativa: não representa progresso. */
+
+.painel__faixa {
+    width: 100%;
+    height: clamp(24px, 3vw, 58px);
+    margin-bottom: clamp(28px, 2.9vw, 56px);
+    border-radius: 999px;
+    background: var(--cor-verde);
+}
+
+/* Cabeçalho do painel (identificação e títulos) */
+
+.painel__eyebrow {
+    color: var(--cor-roxo);
+    font-size: clamp(0.8rem, 0.85vw, 0.95rem);
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
+.painel__titulo {
+    margin-top: clamp(10px, 1vw, 16px);
+    color: var(--cor-texto);
+    font-size: clamp(1.9rem, 2.6vw, 3.25rem);
+    font-weight: 800;
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    text-wrap: balance;
+    overflow-wrap: break-word;
+}
+
+.painel__subtitulo {
+    margin-top: clamp(10px, 1vw, 16px);
+    color: var(--cor-texto-suave);
+    font-size: clamp(1.05rem, 1.15vw, 1.35rem);
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+/* Colunas: lateral ~1/4 da área interna, principal com o restante. */
+
+.painel__colunas {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
+    gap: var(--gap-colunas);
+    align-items: start;
+    margin-top: clamp(28px, 2.9vw, 56px);
+}
+
+/* Variação aprovada: painel com a coluna lateral à direita.
+   A ordem do HTML permanece lateral -> principal em todos os
+   painéis; aqui apenas a posição visual é invertida. */
+
+.painel--lateral-direita .painel__colunas {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
+}
+
+.painel--lateral-direita .painel__principal {
+    order: 1;
+}
+
+.painel--lateral-direita .painel__lateral {
+    order: 2;
+}
+
+.painel__principal {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.painel__lateral {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: clamp(20px, 2.1vw, 40px);
+}
+
+/* Seção introdutória da trilha */
+
+.trilha__intro-titulo {
+    color: var(--cor-texto);
+    font-size: clamp(1.3rem, 1.56vw, 1.875rem);
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.trilha__intro-texto {
+    margin-top: clamp(12px, 1.25vw, 20px);
+    max-width: 62ch;
+    color: var(--cor-texto-suave);
+    font-size: clamp(1rem, 1.05vw, 1.2rem);
+    line-height: 1.6;
+}
+
+.trilha__intro-texto + .trilha__intro-texto {
+    margin-top: clamp(12px, 1.25vw, 20px);
+}
+
+/* Cartões cinza de conteúdo */
+
+.cartao {
+    padding: clamp(20px, 2.1vw, 40px);
+    background: var(--cor-placeholder);
+    border-radius: var(--raio-media);
+}
+
+.cartao + .cartao {
+    margin-top: clamp(24px, 2.5vw, 48px);
+}
+
+.cartao__titulo {
+    color: var(--cor-texto);
+    font-size: clamp(1.15rem, 1.4vw, 1.6rem);
+    font-weight: 700;
+    line-height: 1.25;
+    overflow-wrap: break-word;
+}
+
+/* Subtítulos de cartões dentro de uma mesma seção
+   (Trilha final). */
+
+.cartao__subtitulo {
+    color: var(--cor-texto);
+    font-size: clamp(1.05rem, 1.25vw, 1.4rem);
+    font-weight: 700;
+    line-height: 1.25;
+    overflow-wrap: break-word;
+}
+
+.cartao__texto {
+    margin-top: clamp(10px, 1vw, 16px);
+    max-width: 68ch;
+    color: var(--cor-texto);
+    font-size: clamp(1rem, 1.05vw, 1.2rem);
+    line-height: 1.6;
+}
+
+.cartao__texto + .cartao__texto {
+    margin-top: clamp(10px, 1vw, 16px);
+}
+
+/* Cartão que começa direto em parágrafo, sem título. */
+
+.cartao__texto:first-child {
+    margin-top: 0;
+}
+
+.cartao__texto strong {
+    font-weight: 700;
+}
+
+.cartao__lista {
+    margin: clamp(10px, 1vw, 16px) 0 0;
+    padding: 0 0 0 clamp(20px, 1.56vw, 30px);
+    max-width: 68ch;
+    color: var(--cor-texto);
+    font-size: clamp(1rem, 1.05vw, 1.2rem);
+    line-height: 1.6;
+}
+
+.cartao__lista li + li {
+    margin-top: clamp(6px, 0.52vw, 10px);
+}
+
+/* Tabela da seção "ESG + IoT na prática" (Trilha final).
+   A rolagem horizontal fica restrita ao contêiner da tabela,
+   sem provocar rolagem da página inteira. O contêiner recebe
+   tabindex e rótulo acessível na própria página, e o foco
+   visível vem da regra global de :focus-visible do base.css. */
+
+.tabela-rolagem {
+    margin-top: clamp(10px, 1vw, 16px);
+    overflow-x: auto;
+}
+
+.tabela {
+    width: 100%;
+    min-width: 34rem;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.tabela th,
+.tabela td {
+    padding: clamp(10px, 1vw, 16px) clamp(12px, 1.25vw, 20px);
+    border: 1.5px solid var(--cor-borda);
+    vertical-align: top;
+    color: var(--cor-texto);
+    font-size: clamp(0.95rem, 1vw, 1.1rem);
+    line-height: 1.5;
+    overflow-wrap: break-word;
+}
+
+.tabela thead th {
+    background: var(--cor-superficie);
+    font-weight: 700;
+}
+
+/* Botão do megafone: button nativo com o SVG como imagem.
+   O SVG já traz a própria moldura; nenhuma moldura extra é adicionada. */
+
+.ouvir {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    background: transparent;
+    border-radius: var(--raio-media);
+    cursor: pointer;
+}
+
+.ouvir img {
+    display: block;
+    width: clamp(96px, 10vw, 150px);
+    height: auto;
+    border-radius: var(--raio-media);
+}
+
+/* Indicação textual discreta de estado da leitura */
+
+.ouvir__estado {
+    min-height: 1.5em;
+    margin-top: clamp(8px, 0.83vw, 16px);
+    color: var(--cor-texto-suave);
+    font-size: clamp(0.85rem, 0.9vw, 1rem);
+    font-weight: 700;
+    line-height: 1.4;
+    text-align: center;
+    text-wrap: balance;
+}
+
+/* Cartão de palavras-chave */
+
+.palavras {
+    width: 100%;
+    padding: clamp(20px, 2.1vw, 40px);
+    background: var(--cor-superficie);
+    border: 1.5px solid var(--cor-borda);
+    border-radius: var(--raio-media);
+}
+
+.palavras__titulo {
+    color: var(--cor-texto);
+    font-size: clamp(1.1rem, 1.3vw, 1.5rem);
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.palavras__lista {
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(8px, 0.83vw, 16px) clamp(10px, 1.04vw, 20px);
+    margin: clamp(12px, 1.25vw, 20px) 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.palavras__lista li {
+    padding: 6px 14px;
+    border-radius: var(--raio-controle);
+    background: var(--cor-placeholder);
+    color: var(--cor-texto);
+    font-size: clamp(0.9rem, 0.95vw, 1.05rem);
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+/* Responsividade: empilhamento com ordem de leitura coerente.
+   Em telas estreitas o conteúdo vem antes da coluna lateral. */
+
+@media (max-width: 1100px) {
+    .painel__colunas,
+    .painel--lateral-direita .painel__colunas {
+        grid-template-columns: 1fr;
+        gap: clamp(28px, 4vw, 48px);
+    }
+
+    .painel__principal {
+        order: -1;
+    }
+
+    .painel__lateral {
+        order: 0;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    .ouvir {
+        align-self: flex-start;
+    }
+
+    .ouvir__estado {
+        text-align: left;
+    }
+
+    .palavras {
+        flex: 1 1 280px;
+    }
+}
+
+@media (max-width: 560px) {
+    .painel {
+        padding: clamp(20px, 5vw, 32px);
+    }
+
+    .painel__lateral {
+        flex-direction: column;
+    }
+
+    .palavras {
+        flex-basis: 100%;
+    }
+}
