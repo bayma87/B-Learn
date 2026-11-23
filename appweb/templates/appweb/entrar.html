@@ -1,0 +1,25 @@
+{% extends 'appweb/auth_base.html' %}
+
+{% block titulo %}Entrar{% endblock %}
+
+{% block menu %}
+    {% include 'appweb/menu_lateral.html' with pagina_atual='entrar' %}
+{% endblock %}
+
+{% block conteudo %}
+    <h1>Entrar</h1>
+    <p class="subtitulo">
+        Acesse sua conta para continuar suas trilhas e ver o seu progresso.
+    </p>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {% include 'appweb/_campos_formulario.html' %}
+        <input type="hidden" name="next" value="{{ next }}">
+        <button type="submit" class="botao">Entrar</button>
+    </form>
+
+    <p class="rodape">
+        Ainda não tem conta? <a href="{% url 'cadastro' %}">Criar conta</a>
+    </p>
+{% endblock %}

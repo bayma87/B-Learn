@@ -7,7 +7,8 @@ from pathlib import Path
 from decimal import Decimal, ROUND_DOWN, getcontext, localcontext
 from unittest.mock import patch
 
-from django.test import TestCase
+# Os testes de tela/API rodam com um usuário logado (login é obrigatório).
+from appweb.testes_utils import TestCaseAutenticado as TestCase
 from django.urls import resolve, reverse
 
 from appweb.models import AssessmentResult, ContactMessage
