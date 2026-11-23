@@ -57,6 +57,9 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    # Exige login em todas as views, exceto as marcadas com
+    # @login_not_required (início, quem somos, entrar e cadastro).
+    'appweb.middleware.LoginObrigatorioMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'appweb.middleware.RestrictAdminMiddleware',
@@ -103,6 +106,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {'min_length': 8},
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -113,11 +117,23 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+# Autenticação e sessão
+
+LOGIN_URL = 'entrar'
+LOGIN_REDIRECT_URL = 'painel_microlearning'
+LOGOUT_REDIRECT_URL = 'entrar'
+
+# A sessão expira após 8 horas e o cookie não é acessível via JavaScript.
+SESSION_COOKIE_AGE = 60 * 60 * 8
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+
+
 # Internationalization
 # https://docs.djangoproject.com/en/6.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+LANGUAGE_CODE = 'pt-br'
+TIME_ZONE = 'America/Sao_Paulo'
 USE_I18N = True
 USE_TZ = True
 

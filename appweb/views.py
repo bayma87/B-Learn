@@ -5,12 +5,16 @@ from decimal import Decimal
 from pathlib import Path
 
 from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth import login
+from django.contrib.auth.decorators import login_not_required
+from django.contrib.auth.views import LoginView, LogoutView
 from django.db.models import Sum
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_GET, require_POST
 
-from .forms import ContactMessageForm
+from .forms import CadastroForm, ContactMessageForm, EntrarForm
 from .fornecedores import (
     carregar_dados_fornecedores,
     consultar_catalogo,
@@ -36,7 +40,7 @@ from .equipamentos import (
     carregar_dados_equipamentos,
     calcular_consumo_por_hora,
 )
-from .models import RegistroResiduo
+from .models import ItemConcluido, RegistroResiduo
 from .recomendacoes import gerar_recomendacoes
 from .perfil_empresa import (
     validar_perfil_empresa,
@@ -107,6 +111,7 @@ def get_recommendations(weakest_pillar):
     return recommendations.get(weakest_pillar, recommendations['Governança'])
 
 
+@login_not_required
 def home(request):
     return render(request, 'appweb/home.html')
 
@@ -114,6 +119,7 @@ def quiz(request):
     return render(request, 'appweb/quiz.html')
 
 
+@login_not_required
 def quem_somos(request):
     if request.method == 'POST':
         form = ContactMessageForm(request.POST)
@@ -137,11 +143,14 @@ def quem_somos(request):
     return render(request, 'appweb/quem_somos.html', {'form': form})
 
 def painel_residuos(request):
-    resumo = RegistroResiduo.objects.aggregate(
+    # Somente os registros do usuário logado entram no painel.
+    registros = RegistroResiduo.objects.filter(usuario=request.user)
+
+    resumo = registros.aggregate(
         total_kg=Sum('quantidade_kg', default=0),
     )
 
-    resumo_reciclado = RegistroResiduo.objects.filter(
+    resumo_reciclado = registros.filter(
         destino='reciclado',
     ).aggregate(
         reciclado_kg=Sum('quantidade_kg', default=0),
@@ -371,13 +380,13 @@ def simular_investimentos(request):
     )
 
 
-def _concluidos_da_sessao(request):
-    concluidos = request.session.get('microlearning', [])
-
-    if not isinstance(concluidos, list):
-        return set()
-
-    return {item for item in concluidos if isinstance(item, str)}
+def _concluidos_do_usuario(usuario):
+    """Itens de microlearning concluídos pelo usuário logado."""
+    return set(
+        ItemConcluido.objects.filter(usuario=usuario).values_list(
+            'item_id', flat=True,
+        )
+    )
 
 
 def painel_microlearning(request):
@@ -397,7 +406,7 @@ def dados_microlearning(request):
         )
 
     return JsonResponse(
-        montar_painel(catalogo, _concluidos_da_sessao(request)),
+        montar_painel(catalogo, _concluidos_do_usuario(request.user)),
         json_dumps_params={'ensure_ascii': False},
     )
 
@@ -420,9 +429,10 @@ def responder_microlearning(request):
         if not isinstance(corpo, dict):
             raise ValueError('O corpo deve ser um objeto JSON.')
 
+        concluidos_antes = _concluidos_do_usuario(request.user)
         resultado, concluidos = registrar_resposta(
             catalogo,
-            _concluidos_da_sessao(request),
+            concluidos_antes,
             corpo.get('id'),
             corpo.get('resposta'),
         )
@@ -433,7 +443,11 @@ def responder_microlearning(request):
             json_dumps_params={'ensure_ascii': False},
         )
 
-    request.session['microlearning'] = sorted(concluidos)
+    for item_id in concluidos - concluidos_antes:
+        ItemConcluido.objects.get_or_create(
+            usuario=request.user,
+            item_id=item_id,
+        )
 
     return JsonResponse(
         {
@@ -473,3 +487,40 @@ def dados_fornecedores(request):
         consultar_catalogo(fornecedores, produtos, filtros),
         json_dumps_params={'ensure_ascii': False},
     )
+
+
+class EntrarView(LoginView):
+    template_name = 'appweb/entrar.html'
+    authentication_form = EntrarForm
+    redirect_authenticated_user = True
+
+
+entrar = login_not_required(EntrarView.as_view())
+
+
+class SairView(LogoutView):
+    """Logout apenas via POST (protegido por CSRF)."""
+
+
+sair = SairView.as_view()
+
+
+@login_not_required
+def cadastro(request):
+    if request.user.is_authenticated:
+        return redirect(settings.LOGIN_REDIRECT_URL)
+
+    if request.method == 'POST':
+        form = CadastroForm(request.POST)
+        if form.is_valid():
+            usuario = form.save()
+            login(request, usuario)
+            messages.success(
+                request,
+                f'Conta criada! Bem-vindo(a), {usuario.username}.',
+            )
+            return redirect(settings.LOGIN_REDIRECT_URL)
+    else:
+        form = CadastroForm()
+
+    return render(request, 'appweb/cadastro.html', {'form': form})

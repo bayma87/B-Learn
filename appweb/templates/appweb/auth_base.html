@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block titulo %}{% endblock %} | ESG Impact</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #2b0d2f;
+            color: #f3e7ef;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        header {
+            padding: 20px 24px;
+            background: #07080c;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        a {
+            color: #f2d7af;
+            text-underline-offset: 4px;
+        }
+
+        .marca {
+            color: #f3e7ef;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-decoration: none;
+        }
+
+        main {
+            display: flex;
+            justify-content: center;
+            padding: 56px 16px;
+        }
+
+        .cartao {
+            width: 100%;
+            max-width: 420px;
+            padding: 32px 28px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 18px;
+            background: #1b081f;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: 1.6rem;
+        }
+
+        .subtitulo {
+            margin: 0 0 24px;
+            color: rgba(244, 232, 241, 0.85);
+            line-height: 1.5;
+        }
+
+        .grupo {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+
+        .campo {
+            width: 100%;
+            min-height: 46px;
+            padding: 10px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.04);
+            color: #f3e7ef;
+            font-size: 1rem;
+        }
+
+        .campo:focus-visible,
+        .botao:focus-visible {
+            outline: 2px solid #f2d7af;
+            outline-offset: 2px;
+        }
+
+        .ajuda {
+            margin-top: 6px;
+            font-size: 0.85rem;
+            color: rgba(244, 232, 241, 0.7);
+        }
+
+        .ajuda ul {
+            margin: 4px 0 0;
+            padding-left: 18px;
+        }
+
+        .erro {
+            margin-top: 6px;
+            color: #ffb3b3;
+            font-size: 0.9rem;
+        }
+
+        .alerta {
+            margin-bottom: 18px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 140, 140, 0.5);
+            background: rgba(255, 90, 90, 0.12);
+            color: #ffd0d0;
+        }
+
+        .alerta ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        .botao {
+            width: 100%;
+            min-height: 48px;
+            margin-top: 8px;
+            border: 0;
+            border-radius: 12px;
+            background: #c464cc;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .botao:hover {
+            background: #a64eb5;
+        }
+
+        .rodape {
+            margin: 22px 0 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        {% block menu %}{% endblock %}
+
+        <a class="marca" href="{% url 'home' %}">ESG IMPACT</a>
+    </header>
+
+    <main>
+        <section class="cartao">
+            {% block conteudo %}{% endblock %}
+        </section>
+    </main>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{% extends 'appweb/auth_base.html' %}
+
+{% block titulo %}Criar conta{% endblock %}
+
+{% block menu %}
+    {% include 'appweb/menu_lateral.html' with pagina_atual='cadastro' %}
+{% endblock %}
+
+{% block conteudo %}
+    <h1 style="margin-bottom: 24px;">Criar conta</h1>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {% include 'appweb/_campos_formulario.html' %}
+        <button type="submit" class="botao">Criar conta</button>
+    </form>
+
+    <p class="rodape">
+        Já tem conta? <a href="{% url 'entrar' %}">Entrar</a>
+    </p>
+{% endblock %}

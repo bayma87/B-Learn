@@ -120,6 +120,59 @@
         font-weight: 700;
     }
 
+    .menu-lateral-conta {
+        margin-top: 24px;
+        padding-top: 18px;
+        border-top: 1px solid rgba(255, 255, 255, 0.14);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .menu-lateral-conta p {
+        margin: 0;
+        color: rgba(244, 232, 241, 0.85);
+        overflow-wrap: anywhere;
+    }
+
+    .menu-lateral-conta form {
+        margin: 0;
+    }
+
+    .menu-lateral-conta a,
+    .menu-lateral-conta button {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        min-height: 48px;
+        padding: 10px 18px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.03);
+        color: #f3e7ef;
+        font: inherit;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .menu-lateral-conta a:hover,
+    .menu-lateral-conta button:hover {
+        background: rgba(255, 255, 255, 0.09);
+        border-color: rgba(255, 255, 255, 0.35);
+    }
+
+    .menu-lateral-conta a[aria-current="page"] {
+        border-color: #c464cc;
+        color: #f2d7af;
+        font-weight: 700;
+    }
+
+    .menu-lateral-conta a:focus-visible,
+    .menu-lateral-conta button:focus-visible {
+        outline: 2px solid #f2d7af;
+        outline-offset: 3px;
+    }
+
     @media (prefers-reduced-motion: reduce) {
         .menu-lateral {
             transform: none;
@@ -213,6 +266,27 @@
             Quem somos
         </a>
     </nav>
+
+    <div class="menu-lateral-conta">
+        {% if user.is_authenticated %}
+            <p>Conectado como <strong>{{ user.get_username }}</strong></p>
+
+            <form method="post" action="{% url 'sair' %}">
+                {% csrf_token %}
+                <button type="submit">Sair</button>
+            </form>
+        {% else %}
+            <a href="{% url 'entrar' %}"
+               {% if pagina_atual == 'entrar' %}aria-current="page"{% endif %}>
+                Entrar
+            </a>
+
+            <a href="{% url 'cadastro' %}"
+               {% if pagina_atual == 'cadastro' %}aria-current="page"{% endif %}>
+                Criar conta
+            </a>
+        {% endif %}
+    </div>
 </div>
 
 <script>

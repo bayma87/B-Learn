@@ -190,6 +190,9 @@
 
     <main>
         <h1>Aprenda ESG no dia a dia</h1>
+        {% for aviso in messages %}
+            <p class="intro" role="status">{{ aviso }}</p>
+        {% endfor %}
         <p class="intro">
             Microaprendizado rápido: responda quizzes, cumpra desafios de poucos
             minutos e veja o efeito das suas atitudes. Alguns desafios são
@@ -256,6 +259,7 @@
     <script>
         const URL_DADOS = "{% url 'dados_microlearning' %}";
         const URL_RESPONDER = "{% url 'responder_microlearning' %}";
+        const URL_ENTRAR = "{% url 'entrar' %}";
         const CSRF = "{{ csrf_token }}";
         const mensagem = document.getElementById('mensagem-dados');
 
@@ -271,6 +275,15 @@
             alvo.replaceChildren(...cartoes);
         }
 
+        // Sessão expirada: o servidor responde 401 e mandamos para o login.
+        function irParaLoginSeSessaoExpirou(resposta) {
+            if (resposta.status === 401) {
+                window.location.href = URL_ENTRAR + '?next=' +
+                    encodeURIComponent(window.location.pathname);
+                throw new Error('Sessão expirada.');
+            }
+        }
+
         async function enviar(id, resposta) {
             const retorno = await fetch(URL_RESPONDER, {
                 method: 'POST',
@@ -280,6 +293,7 @@
                 },
                 body: JSON.stringify({ id: id, resposta: resposta })
             });
+            irParaLoginSeSessaoExpirou(retorno);
             const corpo = await retorno.json();
 
             if (!retorno.ok) {
@@ -456,6 +470,7 @@
         async function carregar() {
             try {
                 const resposta = await fetch(URL_DADOS, { cache: 'no-store' });
+                irParaLoginSeSessaoExpirou(resposta);
 
                 if (!resposta.ok) {
                     throw new Error('Não foi possível consultar a API.');
