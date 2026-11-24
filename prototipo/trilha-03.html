@@ -277,9 +277,48 @@
                 </div>
             </section>
 
+
+            <section class="painel painel-interativo" id="catalogo-fornecedores" aria-labelledby="fornecedores-titulo">
+                <div class="painel__faixa" aria-hidden="true"></div>
+                <div class="painel__principal">
+                    <article class="cartao">
+                        <p class="painel__eyebrow">Ferramenta prática de governança</p>
+                        <h2 class="cartao__titulo" id="fornecedores-titulo">06. Catálogo e avaliação de fornecedores</h2>
+                        <p class="cartao__texto">Use os filtros para localizar fornecedores e compare custo, durabilidade, consumo de energia e evidências ESG. Os fornecedores e valores são fictícios, criados apenas para demonstrar a funcionalidade.</p>
+                        <div class="filtros-fornecedor">
+                            <label>Buscar fornecedor ou produto<input type="search" id="fornecedor-busca" placeholder="Ex.: embalagem, Eco..." /></label>
+                            <label>Critério ESG<select id="fornecedor-filtro"><option value="todos">Todos</option><option value="alto">Boas evidências ESG</option><option value="atencao">Exige verificação</option></select></label>
+                            <label>Ordenar por<select id="fornecedor-ordem"><option value="score">Melhor avaliação ESG</option><option value="preco">Menor custo</option><option value="energia">Menor consumo</option></select></label>
+                        </div>
+                        <div class="tabela-rolagem" tabindex="0" role="region" aria-label="Catálogo de fornecedores, tabela com rolagem horizontal">
+                            <table class="tabela tabela-fornecedores"><thead><tr><th>Selecionar</th><th>Fornecedor / produto</th><th>Preço unitário</th><th>Durabilidade</th><th>Energia</th><th>Evidências</th><th>Avaliação</th></tr></thead><tbody id="fornecedores-corpo"></tbody></table>
+                        </div>
+                        <p class="feedback-atividade" id="fornecedor-feedback" role="status" aria-live="polite">Selecione até três fornecedores para comparar.</p>
+                        <button type="button" class="botao-acao" id="comparar-fornecedores">Comparar selecionados</button>
+                        <div id="comparacao-fornecedores" class="comparacao-fornecedores" aria-live="polite"></div>
+                    </article>
+                    <article class="cartao">
+                        <h3 class="cartao__titulo">Como identificar possíveis práticas de greenwashing?</h3>
+                        <p class="cartao__texto">Desconfie de afirmações genéricas sem comprovação. Antes de aprovar um fornecedor, solicite documentos, indicadores, origem dos materiais e informações verificáveis. Um selo ou uma frase de marketing, isoladamente, não comprova desempenho sustentável.</p>
+                        <div class="checklist-social">
+                            <label><input type="checkbox"> A empresa apresenta dados objetivos e atualizados?</label>
+                            <label><input type="checkbox"> Existem documentos ou certificações que possam ser verificados?</label>
+                            <label><input type="checkbox"> Os impactos e limites da informação estão explicados?</label>
+                            <label><input type="checkbox"> O fornecedor informa como mede consumo e geração de resíduos?</label>
+                        </div>
+                    </article>
+                    <article class="cartao">
+                        <h3 class="cartao__titulo">Governança na decisão de compra</h3>
+                        <p class="cartao__texto">Uma decisão responsável deve ser documentada: quais critérios foram utilizados, quem avaliou, quais evidências foram analisadas e por que o fornecedor foi escolhido. O menor preço não deve ser o único fator.</p>
+                        <div class="governanca-principios"><div><strong>Transparência</strong><span>Critérios claros e acessíveis.</span></div><div><strong>Rastreabilidade</strong><span>Registro das evidências e decisões.</span></div><div><strong>Ética</strong><span>Tratamento justo e prevenção de conflitos de interesse.</span></div><div><strong>Segurança</strong><span>Proteção dos dados usados na avaliação.</span></div></div>
+                    </article>
+                </div>
+            </section>
+
         </div>
     </main>
 
     <script src="assets/js/leitura.js"></script>
+    <script src="assets/js/trilhas-interativas.js"></script>
 </body>
 </html>
