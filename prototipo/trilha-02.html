@@ -323,9 +323,52 @@
                 </div>
             </section>
 
+
+            <section class="painel painel-interativo" id="atividade-social" aria-labelledby="social-atividade-titulo">
+                <div class="painel__faixa" aria-hidden="true"></div>
+                <div class="painel__principal">
+                    <article class="cartao">
+                        <p class="painel__eyebrow">Aprendizagem prática</p>
+                        <h2 class="cartao__titulo" id="social-atividade-titulo">06. Microlearning: ESG Social no dia a dia</h2>
+                        <p class="cartao__texto">Leia a situação e escolha uma atitude que contribua para um ambiente de trabalho mais seguro, inclusivo e saudável.</p>
+                        <div class="atividade-box">
+                            <h3>Desafio rápido</h3>
+                            <p>Uma colaboradora relata que o acesso ao sistema interno não funciona bem com o leitor de tela que ela utiliza. Qual deve ser a primeira atitude da equipe?</p>
+                            <div class="quiz-opcoes" role="group" aria-label="Respostas do desafio social">
+                                <button type="button" class="quiz-opcao" data-social-answer="a">Pedir que ela use o sistema de outra forma, sem alterar nada.</button>
+                                <button type="button" class="quiz-opcao" data-social-answer="b">Registrar a barreira, ouvir a colaboradora e priorizar uma correção acessível.</button>
+                                <button type="button" class="quiz-opcao" data-social-answer="c">Retirar a colaboradora da atividade.</button>
+                            </div>
+                            <p class="feedback-atividade" id="social-feedback" role="status" aria-live="polite">Selecione uma resposta para receber feedback.</p>
+                        </div>
+                    </article>
+                    <article class="cartao">
+                        <h3 class="cartao__titulo">Atividade relacionada à rotina de trabalho</h3>
+                        <p class="cartao__texto">Marque as práticas que sua equipe pode adotar. A lista fica salva neste navegador para acompanhar a participação durante a demonstração.</p>
+                        <div class="checklist-social">
+                            <label><input type="checkbox" data-social-task="dialogo"> Realizar uma conversa de escuta com a equipe.</label>
+                            <label><input type="checkbox" data-social-task="acessibilidade"> Identificar e comunicar uma barreira de acessibilidade.</label>
+                            <label><input type="checkbox" data-social-task="seguranca"> Revisar um risco de segurança no ambiente.</label>
+                            <label><input type="checkbox" data-social-task="bemestar"> Sugerir uma melhoria para o bem-estar no trabalho.</label>
+                        </div>
+                        <div class="progresso-wrap"><div class="progresso-topo"><strong>Participação na atividade</strong><span id="social-progresso-texto">0 de 4 concluídas</span></div><div class="progresso-trilho"><div id="social-progresso-barra" class="progresso-barra"></div></div></div>
+                    </article>
+                    <article class="cartao">
+                        <h3 class="cartao__titulo">Simulação IoT: hábitos sustentáveis e bem-estar</h3>
+                        <p class="cartao__texto">Simule uma ação de rotina apoiada por sensores. Os dados abaixo são demonstrativos, não vêm de sensores reais.</p>
+                        <div class="iot-simulacao">
+                            <div><span class="iot-indicador">Qualidade do ambiente</span><strong id="iot-ambiente-valor">Adequada</strong><small id="iot-ambiente-detalhe">Condição simulada dentro da faixa de referência.</small></div>
+                            <button type="button" class="botao-acao" id="iot-simular">Simular alerta de ambiente</button>
+                            <p id="iot-feedback" class="feedback-atividade" role="status" aria-live="polite">Ative a simulação para ver como a equipe pode agir.</p>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
         </div>
     </main>
 
     <script src="assets/js/leitura.js"></script>
+    <script src="assets/js/trilhas-interativas.js"></script>
 </body>
 </html>
