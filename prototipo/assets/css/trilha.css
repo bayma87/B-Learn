@@ -141,6 +141,41 @@
     margin-top: clamp(24px, 2.5vw, 48px);
 }
 
+/* Chamada para a atividade ao fim do conteúdo. */
+
+.atividade-acesso {
+    margin-top: clamp(30px, 3vw, 60px);
+    background: #FFFFFF;
+    border: 1.5px solid var(--cor-placeholder);
+    border-left: 6px solid var(--cor-roxo);
+}
+
+.atividade-acesso .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    max-width: 100%;
+    min-height: clamp(48px, 3.2vw, 60px);
+    margin-top: clamp(16px, 1.6vw, 24px);
+    padding: 10px clamp(20px, 1.8vw, 32px);
+    border: 1.5px solid transparent;
+    border-radius: var(--raio-controle);
+    background: var(--cor-verde);
+    color: var(--cor-verde-texto);
+    font-size: clamp(1rem, 0.95vw, 1.1rem);
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+    text-decoration: none;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.atividade-acesso .btn:hover {
+    filter: brightness(0.94);
+}
+
 .cartao__titulo {
     color: var(--cor-texto);
     font-size: clamp(1.15rem, 1.4vw, 1.6rem);
