@@ -79,4 +79,34 @@ urlpatterns = [
         views.dados_fornecedores,
         name='dados_fornecedores',
     ),
+    path(
+        'prototipo/',
+        views.pagina_prototipo,
+        name='prototipo_home',
+    ),
+    path(
+        'prototipo/<path:arquivo>',
+        views.pagina_prototipo,
+        name='prototipo_arquivo',
+    ),
+    path(
+        'simuladores/ambiental/',
+        views.simulador_ambiental,
+        name='simulador_ambiental',
+    ),
+    path(
+        'simuladores/ambiental/simular',
+        views.simular_ambiental,
+        name='simular_ambiental',
+    ),
+    path(
+        'atividades/introducao/alerta/',
+        views.atividade_introducao,
+        name='atividade_introducao',
+    ),
+    path(
+        'atividades/introducao/alerta/interpretar',
+        views.interpretar_alerta,
+        name='interpretar_alerta',
+    ),
 ]

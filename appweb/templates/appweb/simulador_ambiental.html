@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <title>Acompanhar uma ação de energia — B-Learn</title>
+    <link rel="stylesheet" href="/prototipo/assets/css/tokens.css">
+    <link rel="stylesheet" href="/prototipo/assets/css/base.css">
+    <link rel="stylesheet" href="/prototipo/assets/css/header.css">
+    <link rel="stylesheet" href="/prototipo/assets/css/trilha.css">
+    <link rel="stylesheet" href="/prototipo/assets/css/home.css">
+    <link rel="stylesheet" href="/prototipo/assets/css/simuladores.css">
+</head>
+<body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+    <header class="site-header">
+        <div class="container header__inner">
+            <a class="brand" href="/prototipo/index.html" aria-label="B-Learn — página inicial">
+                <span class="brand__placeholder" aria-hidden="true"></span>
+            </a>
+
+            <nav class="main-nav" aria-label="Navegação principal">
+                <a href="/prototipo/index.html">Home</a>
+                <a href="/prototipo/index.html#trilhas">Trilhas</a>
+                <a href="/prototipo/sobre.html">Sobre</a>
+            </nav>
+
+            <a class="header__circle" href="/prototipo/trilha-01.html#painel-energia"
+               aria-label="Voltar à Energia na Trilha 01"></a>
+        </div>
+    </header>
+
+    <main id="conteudo" class="container simulador">
+        {% if erro_interno %}
+            <section class="cartao simulador__intro" aria-labelledby="titulo-erro">
+                <p class="simulador__eyebrow">Trilha 01 — Ambiental</p>
+                <h1 class="simulador__titulo" id="titulo-erro">Acompanhar uma ação de energia</h1>
+                <p class="cartao__texto">{{ erro_interno }}</p>
+                <p><a class="simulador__voltar" href="/prototipo/trilha-01.html#painel-energia">Voltar à Energia na Trilha 01</a></p>
+            </section>
+        {% else %}
+            {{ cenario|json_script:"cenario-inicial" }}
+
+            <section class="cartao simulador__intro" aria-labelledby="titulo-simulador">
+                <p class="simulador__eyebrow">Trilha 01 — Ambiental</p>
+                <h1 class="simulador__titulo" id="titulo-simulador">Acompanhar uma ação de energia</h1>
+                <p class="simulador__subtitulo">
+                    Cenário fictício: {{ local }}. Ação: {{ acao }}.
+                </p>
+                <p class="cartao__texto">
+                    <strong>Objetivo:</strong> comparar o consumo registrado em duas janelas de
+                    {{ janela }} dias e interpretar o que a diferença significa — e o que ela
+                    não prova.
+                </p>
+                <p class="cartao__texto">
+                    As leituras e a tarifa abaixo são demonstrativas e editáveis. Nenhuma
+                    simulação é executada até você acionar o cálculo.
+                </p>
+                <div class="simulador__aviso">
+                    <p class="cartao__texto">{{ aviso_causal }}</p>
+                    <p class="cartao__texto">
+                        Redução de consumo não equivale automaticamente a redução de emissões
+                        calculada. Este simulador não calcula emissões.
+                    </p>
+                </div>
+            </section>
+
+            <section class="cartao simulador__entradas" aria-labelledby="titulo-entradas">
+                <h2 class="cartao__titulo" id="titulo-entradas">Entradas editáveis</h2>
+                <p class="simulador__instrucao" id="leituras-instrucao">
+                    Cada linha é o consumo registrado em um dia, em {{ unidade }}. As médias
+                    calculadas serão exibidas em {{ unidade_medias }}. Informe um número não
+                    negativo, usando ponto como separador decimal (exemplo: 50.50). Não há
+                    pareamento entre dias das duas janelas.
+                </p>
+
+                <form class="simulador__formulario" id="formulario-ambiental"
+                      method="post" action="{% url 'simular_ambiental' %}" novalidate>
+                    {% csrf_token %}
+
+                    <div class="tabela-rolagem" tabindex="0"
+                         role="region" aria-labelledby="legenda-antes">
+                        <table class="tabela simulador__tabela">
+                            <caption class="simulador__legenda" id="legenda-antes">
+                                Antes da implantação — {{ periodo_antes.inicio }} a {{ periodo_antes.fim }}
+                                ({{ periodo_antes.dias }} dias)
+                            </caption>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Data (AAAA-MM-DD)</th>
+                                    <th scope="col" id="coluna-consumo-antes">Consumo ({{ unidade }})</th>
+                                    <th scope="col">Validação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for linha in linhas_antes %}
+                                    <tr>
+                                        <th scope="row" id="data-antes-{{ linha.indice }}">{{ linha.data }}</th>
+                                        <td>
+                                            <input type="number" step="any" min="0" inputmode="decimal"
+                                                   autocomplete="off"
+                                                   id="consumo-antes-{{ linha.indice }}"
+                                                   name="consumos_antes[{{ linha.indice }}]"
+                                                   value="{{ linha.valor }}"
+                                                   aria-labelledby="data-antes-{{ linha.indice }} coluna-consumo-antes"
+                                                   aria-describedby="leituras-instrucao erro-consumo-antes-{{ linha.indice }}">
+                                        </td>
+                                        <td>
+                                            <p class="simulador__erro" id="erro-consumo-antes-{{ linha.indice }}"></p>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="tabela-rolagem" tabindex="0"
+                         role="region" aria-labelledby="legenda-depois">
+                        <table class="tabela simulador__tabela">
+                            <caption class="simulador__legenda" id="legenda-depois">
+                                Depois da implantação — {{ periodo_depois.inicio }} a {{ periodo_depois.fim }}
+                                ({{ periodo_depois.dias }} dias)
+                            </caption>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Data (AAAA-MM-DD)</th>
+                                    <th scope="col" id="coluna-consumo-depois">Consumo ({{ unidade }})</th>
+                                    <th scope="col">Validação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for linha in linhas_depois %}
+                                    <tr>
+                                        <th scope="row" id="data-depois-{{ linha.indice }}">{{ linha.data }}</th>
+                                        <td>
+                                            <input type="number" step="any" min="0" inputmode="decimal"
+                                                   autocomplete="off"
+                                                   id="consumo-depois-{{ linha.indice }}"
+                                                   name="consumos_depois[{{ linha.indice }}]"
+                                                   value="{{ linha.valor }}"
+                                                   aria-labelledby="data-depois-{{ linha.indice }} coluna-consumo-depois"
+                                                   aria-describedby="leituras-instrucao erro-consumo-depois-{{ linha.indice }}">
+                                        </td>
+                                        <td>
+                                            <p class="simulador__erro" id="erro-consumo-depois-{{ linha.indice }}"></p>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="simulador__campo">
+                        <label for="tarifa">Tarifa da energia ({{ moeda }} por {{ unidade }})</label>
+                        <p class="simulador__instrucao" id="tarifa-instrucao">
+                            Premissa demonstrativa usada para estimar a diferença de custo.
+                            Use ponto como separador decimal; sem separador de milhar.
+                        </p>
+                        <input type="number" step="any" min="0" inputmode="decimal"
+                               autocomplete="off" id="tarifa" name="tarifa"
+                               value="{{ cenario.tarifa }}"
+                               aria-describedby="tarifa-instrucao erro-tarifa">
+                        <p class="simulador__erro" id="erro-tarifa"></p>
+                    </div>
+
+                    <div id="erro-geral" role="alert" hidden></div>
+
+                    <div class="simulador__acoes">
+                        <button class="btn btn--verde" type="submit" id="botao-calcular">
+                            Calcular acompanhamento da ação
+                        </button>
+                        <button class="btn btn--lilas" type="button" id="nova-tentativa">
+                            Simular com outros dados
+                        </button>
+                        <button class="btn btn--lilas" type="button" id="restaurar-cenario">
+                            Restaurar cenário inicial
+                        </button>
+                    </div>
+
+                    <p class="simulador__status" id="status-simulador" role="status" aria-live="polite"></p>
+
+                    <p class="simulador__desatualizado" id="resultado-desatualizado" hidden>
+                        Você alterou os dados após o cálculo. O resultado abaixo ainda se refere
+                        à última execução. Acione “Calcular acompanhamento da ação” para atualizá-lo.
+                    </p>
+                </form>
+            </section>
+
+            <section class="cartao simulador__resultado" id="resultado"
+                     aria-labelledby="titulo-resultado" tabindex="-1" hidden>
+                <h2 class="cartao__titulo" id="titulo-resultado">Resultado do cálculo</h2>
+                <p class="cartao__texto">
+                    Os valores abaixo foram calculados pelo servidor a partir das entradas
+                    enviadas na última execução. Entradas são os números informados por você;
+                    médias, diferenças e valores financeiros são calculados.
+                </p>
+                <p class="cartao__texto">
+                    <strong>Convenção de sinal:</strong> diferença negativa indica queda no
+                    consumo em relação ao período anterior; positiva indica aumento; zero
+                    indica estabilidade.
+                </p>
+
+                <dl class="simulador__resultado-lista" id="lista-resultado"></dl>
+
+                <p class="simulador__nota" id="nota-causal"></p>
+                <p class="simulador__nota" id="nota-premissas"></p>
+                <p class="simulador__nota">
+                    Projeção financeira é uma estimativa demonstrativa, não economia realizada
+                    ou garantida. A comparação temporal não comprova efeito causado pela ação.
+                    Redução de consumo não equivale automaticamente a redução de emissões
+                    calculada; este simulador não calcula emissões.
+                </p>
+
+                <a class="simulador__voltar" href="/prototipo/trilha-01.html#painel-energia">
+                    Voltar à Energia na Trilha 01
+                </a>
+            </section>
+        {% endif %}
+    </main>
+
+    {% if not erro_interno %}
+    <script>
+        (function () {
+            const form = document.getElementById('formulario-ambiental');
+            const resultado = document.getElementById('resultado');
+            const listaResultado = document.getElementById('lista-resultado');
+            const status = document.getElementById('status-simulador');
+            const geral = document.getElementById('erro-geral');
+            const desatualizado = document.getElementById('resultado-desatualizado');
+            const cenaInicial = JSON.parse(
+                document.getElementById('cenario-inicial').textContent
+            );
+
+            const tendencias = {
+                queda: 'Queda no consumo',
+                aumento: 'Aumento no consumo',
+                estavel: 'Consumo estável'
+            };
+
+            const orientacoes = {
+                reducao_estimada: 'redução estimada de custo',
+                aumento_estimado: 'aumento estimado de custo',
+                estavel: 'sem variação estimada de custo'
+            };
+
+            function idDoCampo(campo) {
+                const correspondencia = campo.match(/^(consumos_antes|consumos_depois)\[(\d+)\]$/);
+                if (correspondencia) {
+                    const prefixo = correspondencia[1] === 'consumos_antes'
+                        ? 'consumo-antes-'
+                        : 'consumo-depois-';
+                    return prefixo + correspondencia[2];
+                }
+                return campo === 'tarifa' ? 'tarifa' : null;
+            }
+
+            function limparErros() {
+                document.querySelectorAll('[aria-invalid="true"]').forEach(function (campo) {
+                    campo.removeAttribute('aria-invalid');
+                });
+                document.querySelectorAll('.simulador__erro').forEach(function (paragrafo) {
+                    paragrafo.textContent = '';
+                });
+                geral.hidden = true;
+                geral.textContent = '';
+            }
+
+            function mostrarErros(campos, mensagemGeral) {
+                limparErros();
+                Object.entries(campos || {}).forEach(function (entrada) {
+                    const campo = entrada[0];
+                    const texto = entrada[1];
+                    const id = idDoCampo(campo);
+                    if (id) {
+                        const input = document.getElementById(id);
+                        const erro = document.getElementById('erro-' + id);
+                        if (input) {
+                            input.setAttribute('aria-invalid', 'true');
+                        }
+                        if (erro) {
+                            erro.textContent = texto;
+                        }
+                    } else {
+                        geral.textContent += (geral.textContent ? ' ' : '') + texto;
+                    }
+                });
+                if (!geral.textContent && mensagemGeral) {
+                    geral.textContent = mensagemGeral;
+                }
+                geral.hidden = !geral.textContent;
+                status.textContent = 'Não foi possível calcular. Revise os campos destacados.';
+            }
+
+            function coletarEntradas() {
+                function valores(prefixo, quantidade) {
+                    return Array.from({ length: quantidade }, function (_, indice) {
+                        return document.getElementById(prefixo + indice).value;
+                    });
+                }
+                return {
+                    consumos_antes: valores('consumo-antes-', {{ janela }}),
+                    consumos_depois: valores('consumo-depois-', {{ janela }}),
+                    tarifa: document.getElementById('tarifa').value
+                };
+            }
+
+            function formatarMoeda(valor, moeda) {
+                try {
+                    return new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: moeda
+                    }).format(Number(valor));
+                } catch (erro) {
+                    return moeda + ' ' + valor;
+                }
+            }
+
+            function adicionarItem(titulo, valor) {
+                const bloco = document.createElement('div');
+                const termo = document.createElement('dt');
+                const definicao = document.createElement('dd');
+                termo.textContent = titulo;
+                definicao.textContent = valor;
+                bloco.appendChild(termo);
+                bloco.appendChild(definicao);
+                listaResultado.appendChild(bloco);
+            }
+
+            function desenharResultado(dados) {
+                listaResultado.replaceChildren();
+
+                if (dados.situacao !== 'com_dados') {
+                    adicionarItem('Situação', 'Sem dados suficientes para calcular as janelas.');
+                    if (dados.motivo) {
+                        adicionarItem('Motivo', dados.motivo);
+                    }
+                    resultado.hidden = false;
+                    return;
+                }
+
+                adicionarItem('Média antes', dados.media_antes + ' ' + dados.unidade_medias);
+                adicionarItem('Média depois', dados.media_depois + ' ' + dados.unidade_medias);
+                adicionarItem('Diferença', dados.diferenca_absoluta + ' ' + dados.unidade_medias);
+                adicionarItem(
+                    'Variação percentual',
+                    dados.variacao_percentual === null
+                        ? 'Não calculável'
+                        : dados.variacao_percentual + '%'
+                );
+                adicionarItem('Tendência', tendencias[dados.tendencia] || dados.tendencia);
+
+                const custo = dados.custo_diferenca;
+                const projecao = dados.projecao_mensal;
+                adicionarItem(
+                    'Diferença de custo estimada',
+                    formatarMoeda(custo.valor, custo.moeda) + ' por dia — ' +
+                    (orientacoes[custo.orientacao] || custo.orientacao)
+                );
+                adicionarItem(
+                    'Projeção demonstrativa',
+                    formatarMoeda(projecao.valor, custo.moeda) + ' em ' +
+                    projecao.dias + ' dias'
+                );
+
+                document.getElementById('nota-causal').textContent =
+                    'Tarifa premissa: ' + custo.premissa_tarifa + '. ' +
+                    (dados.motivo ? 'Motivo: ' + dados.motivo + '. ' : '') +
+                    dados.aviso_causal;
+                document.getElementById('nota-premissas').textContent =
+                    projecao.premissa;
+
+                resultado.hidden = false;
+            }
+
+            function marcarDesatualizado() {
+                if (!resultado.hidden) {
+                    desatualizado.hidden = false;
+                }
+            }
+
+            form.addEventListener('input', marcarDesatualizado);
+            form.addEventListener('change', marcarDesatualizado);
+
+            form.addEventListener('submit', async function (evento) {
+                evento.preventDefault();
+                limparErros();
+                status.textContent = 'Calculando...';
+
+                try {
+                    const resposta = await fetch('{% url "simular_ambiental" %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify(coletarEntradas())
+                    });
+                    const dados = await resposta.json();
+
+                    if (!resposta.ok) {
+                        mostrarErros(dados.campos, dados.erro);
+                        resultado.hidden = true;
+                        desatualizado.hidden = true;
+                        return;
+                    }
+
+                    desenharResultado(dados.resultado);
+                    desatualizado.hidden = true;
+                    status.textContent = 'Cálculo concluído.';
+                    resultado.focus();
+                } catch (erro) {
+                    mostrarErros({}, 'Não foi possível concluir a simulação.');
+                    resultado.hidden = true;
+                }
+            });
+
+            document.getElementById('nova-tentativa').addEventListener('click', function () {
+                resultado.hidden = true;
+                desatualizado.hidden = true;
+                status.textContent = 'Altere os valores e calcule novamente.';
+                document.getElementById('consumo-antes-0').focus();
+            });
+
+            document.getElementById('restaurar-cenario').addEventListener('click', function () {
+                document.getElementById('consumo-antes-0').value = '';
+                Object.entries(cenaInicial).forEach(function (entrada) {
+                    if (entrada[0] === 'tarifa') {
+                        document.getElementById('tarifa').value = entrada[1];
+                        return;
+                    }
+                    entrada[1].forEach(function (valor, indice) {
+                        const prefixo = entrada[0] === 'consumos_antes'
+                            ? 'consumo-antes-'
+                            : 'consumo-depois-';
+                        document.getElementById(prefixo + indice).value = valor;
+                    });
+                });
+                limparErros();
+                resultado.hidden = true;
+                desatualizado.hidden = true;
+                status.textContent = 'Cenário inicial restaurado.';
+                document.getElementById('consumo-antes-0').focus();
+            });
+        })();
+    </script>
+    {% endif %}
+</body>
+</html>

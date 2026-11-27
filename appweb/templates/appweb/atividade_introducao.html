@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <title>Interpretar um alerta de sensor — B-Learn</title>
+    <link rel="stylesheet" href="/prototipo/assets/css/tokens.css">
+    <link rel="stylesheet" href="/prototipo/assets/css/base.css">
+    <link rel="stylesheet" href="/prototipo/assets/css/header.css">
+    <link rel="stylesheet" href="/prototipo/assets/css/trilha.css">
+    <link rel="stylesheet" href="/prototipo/assets/css/home.css">
+    <link rel="stylesheet" href="/prototipo/assets/css/atividade-introducao.css">
+</head>
+<body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+    <header class="site-header">
+        <div class="container header__inner">
+            <a class="brand" href="/prototipo/index.html" aria-label="B-Learn — página inicial">
+                <span class="brand__placeholder" aria-hidden="true"></span>
+            </a>
+
+            <nav class="main-nav" aria-label="Navegação principal">
+                <a href="/prototipo/index.html">Home</a>
+                <a href="/prototipo/index.html#trilhas">Trilhas</a>
+                <a href="/prototipo/sobre.html">Sobre</a>
+            </nav>
+
+            <a class="header__circle" href="/prototipo/introducao-esg.html#titulo-sensor-impacto"
+               aria-label="Voltar ao conceito Do sensor ao impacto"></a>
+        </div>
+    </header>
+
+    <main id="conteudo" class="container atividade">
+        {% if erro_interno %}
+            <section class="cartao atividade__intro" aria-labelledby="titulo-erro">
+                <p class="atividade__eyebrow">Introdução — Entendendo o ESG</p>
+                <h1 class="atividade__titulo" id="titulo-erro">Interpretar um alerta de sensor</h1>
+                <p class="cartao__texto">{{ erro_interno }}</p>
+                <p>
+                    <a class="atividade__voltar"
+                       href="/prototipo/introducao-esg.html#titulo-sensor-impacto">
+                        Voltar ao conceito “Do sensor ao impacto”
+                    </a>
+                </p>
+            </section>
+        {% else %}
+            {{ cenarios|json_script:"cenarios-disponiveis" }}
+            {{ cenario_inicial|json_script:"cenario-inicial" }}
+
+            <section class="cartao atividade__intro" aria-labelledby="titulo-atividade">
+                <p class="atividade__eyebrow">Introdução — Entendendo o ESG</p>
+                <h1 class="atividade__titulo" id="titulo-atividade">Interpretar um alerta de sensor</h1>
+                <p class="atividade__subtitulo">Do dado à decisão, sem pular a interpretação.</p>
+                <p class="cartao__texto">
+                    <strong>Objetivo:</strong> usar uma leitura de sensor fictícia para entender
+                    como dado, limite e regra se combinam antes de sugerir uma ação. Você vai
+                    comparar a leitura com a condição do cenário e interpretar o resultado.
+                </p>
+                <p class="cartao__texto">
+                    Escolha um cenário, altere apenas a leitura e acione
+                    <strong>Interpretar alerta</strong>. Nada é calculado automaticamente ao
+                    abrir a página ou ao trocar de cenário.
+                </p>
+            </section>
+
+            <section class="cartao atividade__entradas" aria-labelledby="titulo-cenario">
+                <h2 class="cartao__titulo" id="titulo-cenario">Cenário e formulário</h2>
+
+                <form class="atividade__formulario" id="formulario-alerta"
+                      method="post" action="{% url 'interpretar_alerta' %}" novalidate>
+                    {% csrf_token %}
+
+                    <div class="atividade__campo">
+                        <label for="cenario">Cenário</label>
+                        <p class="atividade__instrucao" id="cenario-instrucao">
+                            Cada cenário é fictício. Ao trocar, as premissas e o exemplo de
+                            leitura mudam; o resultado anterior é descartado.
+                        </p>
+                        <select id="cenario" name="cenario_id"
+                                aria-describedby="cenario-instrucao erro-cenario">
+                            {% for opcao in cenarios %}
+                                <option value="{{ opcao.id }}"
+                                        {% if forloop.first %}selected{% endif %}>
+                                    {{ opcao.sensor }} — {{ opcao.local }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <p class="atividade__erro" id="erro-cenario"></p>
+                    </div>
+
+                    <div class="atividade__campo">
+                        <label for="leitura">Leitura do sensor</label>
+                        <p class="atividade__instrucao" id="leitura-instrucao">
+                            Formato do exercício: ponto decimal, sem separador de milhar,
+                            até 8 dígitos inteiros e 0 a 2 casas decimais (exemplo: 1.80).
+                            O sinal negativo é aceito apenas no cenário de temperatura; nos
+                            demais, use valor não negativo. Em porcentagem, use 0 a 100.
+                        </p>
+                        <input type="text" inputmode="text" autocomplete="off"
+                               id="leitura" name="leitura"
+                               value="{{ cenario_inicial.leitura }}"
+                               aria-describedby="leitura-instrucao erro-leitura">
+                        <p class="atividade__erro" id="erro-leitura"></p>
+                    </div>
+
+                    <dl class="atividade__premissas" aria-label="Premissas do cenário">
+                        <div>
+                            <dt>Sensor</dt>
+                            <dd id="premissa-sensor">{{ cenario_inicial.sensor }}</dd>
+                        </div>
+                        <div>
+                            <dt>Local fictício</dt>
+                            <dd id="premissa-local">{{ cenario_inicial.local }}</dd>
+                        </div>
+                        <div>
+                            <dt>Unidade da leitura</dt>
+                            <dd id="premissa-unidade">{{ cenario_inicial.unidade }}</dd>
+                        </div>
+                        <div>
+                            <dt>Limite demonstrativo</dt>
+                            <dd id="premissa-limite">{{ cenario_inicial.limite }}</dd>
+                        </div>
+                        <div>
+                            <dt>Condição da regra</dt>
+                            <dd id="premissa-condicao">acima de</dd>
+                        </div>
+                    </dl>
+
+                    <div id="erro-geral" role="alert" hidden></div>
+
+                    <div class="atividade__acoes">
+                        <button class="btn btn--verde" type="submit" id="botao-interpretar">
+                            Interpretar alerta
+                        </button>
+                        <button class="btn btn--lilas" type="button" id="nova-tentativa">
+                            Interpretar novamente
+                        </button>
+                        <button class="btn btn--lilas" type="button" id="restaurar-cenario">
+                            Restaurar cenário inicial
+                        </button>
+                    </div>
+
+                    <p class="atividade__status" id="status-atividade" role="status" aria-live="polite"></p>
+                    <p class="atividade__nota" id="resultado-oculto" hidden>
+                        A leitura mudou. O resultado anterior foi oculto; interprete novamente
+                        para atualizar a resposta.
+                    </p>
+                </form>
+            </section>
+
+            <section class="cartao atividade__resultado" id="resultado"
+                     aria-labelledby="titulo-resultado" tabindex="-1" hidden>
+                <h2 class="cartao__titulo" id="titulo-resultado">Resultado da interpretação</h2>
+
+                <dl class="atividade__resultado-lista" id="lista-resultado">
+                    <div>
+                        <dt>Situação</dt>
+                        <dd id="resultado-situacao"></dd>
+                    </div>
+                    <div>
+                        <dt>Leitura informada</dt>
+                        <dd id="resultado-leitura"></dd>
+                    </div>
+                    <div>
+                        <dt>Comparação</dt>
+                        <dd id="resultado-comparacao"></dd>
+                    </div>
+                </dl>
+
+                <p class="cartao__texto" id="resultado-explicacao"></p>
+                <p class="cartao__texto" id="resultado-mensagem" hidden></p>
+                <p class="cartao__texto" id="resultado-sugestao" hidden></p>
+                <p class="atividade__nota" id="resultado-nota-inativa" hidden></p>
+
+                <p class="atividade__nota">
+                    A sugestão apresentada é apenas uma opção para avaliar. Ela não foi
+                    executada, não conclui desafio e não recebe pontuação.
+                </p>
+
+                <a class="atividade__voltar"
+                   href="/prototipo/introducao-esg.html#titulo-sensor-impacto">
+                    Voltar ao conceito “Do sensor ao impacto”
+                </a>
+            </section>
+
+            <section class="cartao" aria-labelledby="titulo-limites">
+                <h2 class="cartao__titulo" id="titulo-limites">Limites desta atividade</h2>
+                <ul class="cartao__lista atividade__limites">
+                    <li>Cenário e limite demonstrativos; não são norma técnica ou limite legal.</li>
+                    <li>O alerta pede interpretação e não comprova a causa da leitura.</li>
+                    <li>A atividade não executa ação nem calcula impacto, economia, emissões ou risco.</li>
+                    <li>A decisão depende de avaliação humana.</li>
+                </ul>
+            </section>
+        {% endif %}
+    </main>
+
+    {% if not erro_interno %}
+    <script>
+        (function () {
+            const form = document.getElementById('formulario-alerta');
+            const seletor = document.getElementById('cenario');
+            const leitura = document.getElementById('leitura');
+            const resultado = document.getElementById('resultado');
+            const oculto = document.getElementById('resultado-oculto');
+            const status = document.getElementById('status-atividade');
+            const geral = document.getElementById('erro-geral');
+            const cenarios = JSON.parse(
+                document.getElementById('cenarios-disponiveis').textContent
+            );
+            const inicial = JSON.parse(
+                document.getElementById('cenario-inicial').textContent
+            );
+
+            function condicaoTexto(condicao) {
+                return condicao === 'acima' ? 'acima de' : 'abaixo de';
+            }
+
+            function cenarioSelecionado() {
+                return cenarios.find(function (item) {
+                    return item.id === seletor.value;
+                });
+            }
+
+            function atualizarPremissas(cenario) {
+                document.getElementById('premissa-sensor').textContent = cenario.sensor;
+                document.getElementById('premissa-local').textContent = cenario.local;
+                document.getElementById('premissa-unidade').textContent = cenario.unidade;
+                document.getElementById('premissa-limite').textContent = cenario.limite;
+                document.getElementById('premissa-condicao').textContent =
+                    condicaoTexto(cenario.condicao);
+            }
+
+            function limparErros() {
+                document.querySelectorAll('[aria-invalid="true"]').forEach(function (campo) {
+                    campo.removeAttribute('aria-invalid');
+                });
+                document.getElementById('erro-cenario').textContent = '';
+                document.getElementById('erro-leitura').textContent = '';
+                geral.hidden = true;
+                geral.textContent = '';
+            }
+
+            function mostrarErros(campos, mensagemGeral) {
+                limparErros();
+                Object.entries(campos || {}).forEach(function (entrada) {
+                    const campo = entrada[0];
+                    const texto = entrada[1];
+                    if (campo === 'cenario_id' || campo === 'leitura') {
+                        const alvo = document.getElementById(campo === 'leitura' ? 'leitura' : 'cenario');
+                        const erro = document.getElementById(
+                            campo === 'leitura' ? 'erro-leitura' : 'erro-cenario'
+                        );
+                        alvo.setAttribute('aria-invalid', 'true');
+                        erro.textContent = texto;
+                    } else {
+                        geral.textContent += (geral.textContent ? ' ' : '') + texto;
+                    }
+                });
+                if (!geral.textContent && mensagemGeral) {
+                    geral.textContent = mensagemGeral;
+                }
+                geral.hidden = !geral.textContent;
+                status.textContent = 'Não foi possível interpretar. Revise os campos destacados.';
+            }
+
+            function esconderResultado(mensagem) {
+                resultado.hidden = true;
+                oculto.hidden = true;
+                if (mensagem) {
+                    status.textContent = mensagem;
+                }
+            }
+
+            function desenharResultado(dados) {
+                document.getElementById('resultado-situacao').textContent = dados.titulo;
+                document.getElementById('resultado-leitura').textContent =
+                    dados.cenario.leitura + ' ' + dados.cenario.unidade;
+                document.getElementById('resultado-comparacao').textContent =
+                    condicaoTexto(dados.cenario.condicao) + ' ' +
+                    dados.cenario.limite + ' ' + dados.cenario.unidade;
+                document.getElementById('resultado-explicacao').textContent = dados.explicacao;
+
+                const mensagem = document.getElementById('resultado-mensagem');
+                mensagem.textContent = dados.mensagem || '';
+                mensagem.hidden = !dados.mensagem;
+
+                const sugestao = document.getElementById('resultado-sugestao');
+                sugestao.textContent = dados.sugestao
+                    ? dados.sugestao.rotulo + ': ' + dados.sugestao.titulo
+                    : '';
+                sugestao.hidden = !dados.sugestao;
+
+                const inativa = document.getElementById('resultado-nota-inativa');
+                inativa.textContent = dados.nota_inativa || '';
+                inativa.hidden = !dados.nota_inativa;
+
+                resultado.hidden = false;
+                oculto.hidden = true;
+            }
+
+            seletor.addEventListener('change', function () {
+                const cenario = cenarioSelecionado();
+                if (!cenario) {
+                    return;
+                }
+                atualizarPremissas(cenario);
+                leitura.value = cenario.leitura;
+                limparErros();
+                esconderResultado('Cenário alterado. Interprete quando quiser.');
+            });
+
+            leitura.addEventListener('input', function () {
+                if (!resultado.hidden) {
+                    esconderResultado('Leitura alterada. O resultado anterior foi oculto.');
+                    oculto.hidden = false;
+                }
+            });
+
+            form.addEventListener('submit', async function (evento) {
+                evento.preventDefault();
+                limparErros();
+                status.textContent = 'Interpretando...';
+
+                try {
+                    const resposta = await fetch('{% url "interpretar_alerta" %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            cenario_id: seletor.value,
+                            leitura: leitura.value
+                        })
+                    });
+                    const dados = await resposta.json();
+
+                    if (!resposta.ok) {
+                        mostrarErros(dados.campos, dados.erro);
+                        esconderResultado('');
+                        return;
+                    }
+
+                    desenharResultado(dados.resultado);
+                    status.textContent = 'Interpretação concluída.';
+                    resultado.focus();
+                } catch (erro) {
+                    mostrarErros({}, 'Não foi possível concluir a interpretação.');
+                    esconderResultado('');
+                }
+            });
+
+            document.getElementById('nova-tentativa').addEventListener('click', function () {
+                limparErros();
+                esconderResultado('Interprete quando quiser.');
+                leitura.focus();
+            });
+
+            document.getElementById('restaurar-cenario').addEventListener('click', function () {
+                seletor.value = inicial.id;
+                leitura.value = inicial.leitura;
+                atualizarPremissas(inicial);
+                limparErros();
+                esconderResultado('Cenário inicial restaurado.');
+                leitura.focus();
+            });
+        })();
+    </script>
+    {% endif %}
+</body>
+</html>

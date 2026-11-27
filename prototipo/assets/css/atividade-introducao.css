@@ -1,0 +1,185 @@
+/* Estilos específicos da atividade introdutória de alertas de sensor.
+   Usa apenas os tokens e componentes já existentes em prototipo/assets/css. */
+
+.atividade {
+    display: grid;
+    gap: clamp(24px, 3vw, 56px);
+}
+
+.atividade__intro {
+    border-left: 6px solid var(--cor-roxo);
+}
+
+.atividade__eyebrow {
+    margin-bottom: clamp(8px, 0.8vw, 12px);
+    color: var(--cor-texto-suave);
+    font-size: clamp(0.9rem, 0.95vw, 1rem);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.atividade__titulo {
+    font-size: clamp(2rem, 3vw, 3rem);
+    line-height: 1.15;
+}
+
+.atividade__subtitulo {
+    margin-top: clamp(8px, 0.8vw, 12px);
+    color: var(--cor-texto-suave);
+    font-size: clamp(1rem, 1.1vw, 1.25rem);
+}
+
+.atividade__formulario {
+    display: grid;
+    gap: clamp(20px, 2.2vw, 36px);
+}
+
+.atividade__entradas {
+    background: #FFFFFF;
+    border: 1.5px solid var(--cor-placeholder);
+}
+
+.atividade__entradas .cartao__titulo {
+    margin-bottom: clamp(12px, 1.2vw, 20px);
+}
+
+.atividade__campo {
+    display: grid;
+    gap: 8px;
+    max-width: 34rem;
+}
+
+.atividade__campo label {
+    font-weight: 700;
+}
+
+.atividade__campo select,
+.atividade__campo input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--cor-borda);
+    border-radius: 10px;
+    background: var(--cor-superficie);
+    color: var(--cor-texto);
+    font: inherit;
+}
+
+.atividade__campo [aria-invalid="true"] {
+    border-width: 3px;
+    background: var(--cor-fundo);
+}
+
+.atividade__instrucao {
+    color: var(--cor-texto-suave);
+    font-size: clamp(0.9rem, 0.95vw, 1rem);
+}
+
+.atividade__erro {
+    min-height: 1.4em;
+    color: var(--cor-texto);
+    font-size: clamp(0.9rem, 0.95vw, 1rem);
+    font-weight: 700;
+}
+
+.atividade__erro:not(:empty)::before {
+    content: "Erro: ";
+}
+
+.atividade__premissas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+    gap: clamp(12px, 1.3vw, 24px);
+    margin: 0;
+}
+
+.atividade__premissas > div {
+    padding: 14px;
+    border: 1.5px solid var(--cor-borda);
+    border-radius: var(--raio-media);
+    background: var(--cor-superficie);
+}
+
+.atividade__premissas dt {
+    color: var(--cor-texto-suave);
+    font-size: clamp(0.85rem, 0.9vw, 0.95rem);
+    font-weight: 700;
+}
+
+.atividade__premissas dd {
+    margin: 6px 0 0;
+    overflow-wrap: anywhere;
+    font-weight: 700;
+}
+
+.atividade__acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+.atividade__status {
+    min-height: 1.5em;
+    color: var(--cor-texto-suave);
+    font-weight: 700;
+}
+
+.atividade__resultado {
+    border-left: 6px solid var(--cor-verde);
+}
+
+.atividade__resultado-lista {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    gap: clamp(12px, 1.3vw, 24px);
+    margin: clamp(16px, 1.6vw, 28px) 0 0;
+}
+
+.atividade__resultado-lista > div {
+    padding: 16px;
+    border: 1.5px solid var(--cor-borda);
+    border-radius: var(--raio-media);
+    background: var(--cor-superficie);
+}
+
+.atividade__resultado-lista dt {
+    color: var(--cor-texto-suave);
+    font-size: clamp(0.9rem, 0.95vw, 1rem);
+    font-weight: 700;
+}
+
+.atividade__resultado-lista dd {
+    margin: 6px 0 0;
+    font-size: clamp(1rem, 1.1vw, 1.2rem);
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.atividade__nota {
+    margin-top: clamp(12px, 1.2vw, 20px);
+    color: var(--cor-texto-suave);
+    font-size: clamp(0.95rem, 1vw, 1.1rem);
+}
+
+.atividade__limites li + li {
+    margin-top: 8px;
+}
+
+.atividade__voltar {
+    display: inline-flex;
+    margin-top: clamp(16px, 1.6vw, 28px);
+    color: var(--cor-texto);
+    font-weight: 700;
+    text-underline-offset: 4px;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+@media (max-width: 760px) {
+    .atividade__acoes .btn {
+        width: 100%;
+    }
+}

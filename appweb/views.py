@@ -1,6 +1,7 @@
 
 import json
 import logging
+import mimetypes
 from decimal import Decimal
 from pathlib import Path
 
@@ -10,7 +11,7 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_not_required
 from django.contrib.auth.views import LoginView, LogoutView
 from django.db.models import Sum
-from django.http import JsonResponse
+from django.http import FileResponse, Http404, JsonResponse
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_GET, require_POST
 
@@ -47,6 +48,8 @@ from .perfil_empresa import (
     filtrar_acoes_por_perfil,
 )
 from .residuos import calcular_resumo_residuos
+from .simuladores import aplicar_cenario_ambiental, carregar_cenario_ambiental
+from .atividade_introducao import carregar_cenarios, processar as processar_alerta
 from .social import calcular_indicadores_sociais
 from .sugestoes import selecionar_sugestoes_orientadas
 
@@ -524,3 +527,179 @@ def cadastro(request):
         form = CadastroForm()
 
     return render(request, 'appweb/cadastro.html', {'form': form})
+
+
+_TIPOS_PROTOTIPO = {
+    '.css',
+    '.gif',
+    '.html',
+    '.ico',
+    '.jpeg',
+    '.jpg',
+    '.js',
+    '.png',
+    '.svg',
+    '.webp',
+}
+
+
+@require_GET
+def pagina_prototipo(request, arquivo='index.html'):
+    """Entrega controlada de arquivos do protótipo estático.
+
+    Esta view existe apenas para que o protótipo possa ser revisado por HTTP
+    com seus caminhos relativos intactos. Ela não expõe a raiz do
+    repositório e não é um mecanismo de servir arquivos para produção.
+    """
+    base = (Path(settings.BASE_DIR) / 'prototipo').resolve()
+    relativo = Path(arquivo)
+
+    if relativo.is_absolute() or '..' in relativo.parts:
+        raise Http404('Arquivo não encontrado.')
+
+    caminho = (base / relativo).resolve()
+    if (
+        not caminho.is_relative_to(base)
+        or not caminho.is_file()
+        or caminho.suffix.lower() not in _TIPOS_PROTOTIPO
+    ):
+        raise Http404('Arquivo não encontrado.')
+
+    tipo, _ = mimetypes.guess_type(caminho.name)
+    return FileResponse(
+        caminho.open('rb'),
+        content_type=tipo or 'application/octet-stream',
+    )
+
+
+@require_GET
+def simulador_ambiental(request):
+    """Página educativa do acompanhamento Ambiental."""
+    try:
+        cenario = carregar_cenario_ambiental()
+    except (OSError, UnicodeError, ValueError):
+        logger.exception('Erro ao carregar o simulador ambiental.')
+        return render(
+            request,
+            'appweb/simulador_ambiental.html',
+            {
+                'erro_interno': (
+                    'Não foi possível carregar o cenário do simulador.'
+                ),
+            },
+            status=500,
+        )
+
+    return render(request, 'appweb/simulador_ambiental.html', {
+        'cenario': cenario['valores'],
+        'linhas_antes': cenario['linhas_antes'],
+        'linhas_depois': cenario['linhas_depois'],
+        'janela': cenario['janela'],
+        'periodo_antes': cenario['periodo_antes'],
+        'periodo_depois': cenario['periodo_depois'],
+        'unidade': cenario['unidade'],
+        'unidade_medias': cenario['unidade_medias'],
+        'moeda': cenario['moeda'],
+        'projecao_dias': cenario['projecao_dias'],
+        'acao': cenario['acao'],
+        'local': cenario['local'],
+        'aviso_causal': cenario['aviso_causal'],
+        'resultado': None,
+        'erros': {},
+        'erro_interno': None,
+        'formulario_enviado': False,
+    })
+
+
+@require_POST
+def simular_ambiental(request):
+    """Processa o cenário editado com as funções já existentes."""
+    try:
+        corpo = json.loads(request.body)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({
+            'erro': 'Corpo JSON inválido.',
+            'campos': {},
+        }, status=400)
+
+    try:
+        cenario = carregar_cenario_ambiental()
+        _config, resultado, erros = aplicar_cenario_ambiental(
+            cenario['config'],
+            corpo,
+        )
+    except (OSError, UnicodeError, ValueError):
+        logger.exception('Erro ao processar o simulador ambiental.')
+        return JsonResponse({
+            'erro': 'Não foi possível processar a simulação.',
+            'campos': {},
+        }, status=500)
+
+    if erros:
+        return JsonResponse({
+            'erro': 'Revise os campos destacados.',
+            'campos': erros,
+        }, status=400)
+
+    return JsonResponse({
+        'resultado': resultado,
+        'dados_enviados': {
+            'consumos_antes': corpo.get('consumos_antes'),
+            'consumos_depois': corpo.get('consumos_depois'),
+            'tarifa': corpo.get('tarifa'),
+        },
+    })
+
+
+@require_GET
+def atividade_introducao(request):
+    """Página da atividade introdutória com gatilhos IoT."""
+    try:
+        cenarios = carregar_cenarios()
+    except (OSError, UnicodeError, ValueError):
+        logger.exception('Erro ao carregar a atividade introdutória.')
+        return render(
+            request,
+            'appweb/atividade_introducao.html',
+            {
+                'erro_interno': (
+                    'Não foi possível carregar os cenários da atividade.'
+                ),
+            },
+            status=500,
+        )
+
+    return render(request, 'appweb/atividade_introducao.html', {
+        'cenarios': cenarios,
+        'cenario_inicial': cenarios[0],
+        'erro_interno': None,
+    })
+
+
+@require_POST
+def interpretar_alerta(request):
+    """Interpreta uma leitura usando apenas as regras do catálogo."""
+    try:
+        corpo = json.loads(request.body)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({
+            'erro': 'Corpo JSON inválido.',
+            'campos': {},
+        }, status=400)
+
+    try:
+        resultado, erros = processar_alerta(corpo)
+    except (OSError, UnicodeError, ValueError):
+        logger.exception('Erro ao interpretar o alerta da atividade.')
+        return JsonResponse({
+            'erro': 'Não foi possível interpretar o alerta.',
+            'campos': {},
+        }, status=500)
+
+    if erros:
+        return JsonResponse({
+            'erro': 'Revise os campos destacados.',
+            'campos': erros,
+        }, status=400)
+
+    return JsonResponse({'resultado': resultado})
